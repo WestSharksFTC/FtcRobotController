@@ -1,17 +1,12 @@
-package org.firstinspires.ftc.teamcode.IntoTheDeep;
+package org.firstinspires.ftc.teamcode.Util;
 
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
-import com.qualcomm.robotcore.hardware.IMU;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesOrder;
-import org.firstinspires.ftc.robotcore.external.navigation.AxesReference;
-import org.firstinspires.ftc.robotcore.external.navigation.Orientation;
-
+//@Disabled
 @TeleOp
 public class Chassis extends OpMode {
     DcMotor motorFL;
@@ -57,13 +52,12 @@ public class Chassis extends OpMode {
         double max = Math.max(Math.abs(strafe) + Math.abs(drive) + Math.abs(turn), 1);
 
         double drivePower = -(0.5 * gamepad1.right_trigger) + 1;
-        if(gamepad1.left_bumper) imu.resetYaw();
+        
+        motorFL.setPower(drivePower * (drive + turn + strafe) / max);
+        motorFR.setPower(drivePower * (drive - turn - strafe) / max);
+        motorBL.setPower(drivePower * (drive + turn - strafe) / max);
+        motorBR.setPower(drivePower * (drive - turn + strafe) / max);
 
-
-        motorFL.setPower(((adjustedDrive + adjustedStrafe + turn) / max) * drivePower);
-        motorFR.setPower(((adjustedDrive - adjustedStrafe - turn) / max) * drivePower);
-        motorBL.setPower(((adjustedDrive - adjustedStrafe + turn) / max) * drivePower);
-        motorBR.setPower(((adjustedDrive + adjustedStrafe - turn) / max) * drivePower);
         telemetry.update();
     }
 }
