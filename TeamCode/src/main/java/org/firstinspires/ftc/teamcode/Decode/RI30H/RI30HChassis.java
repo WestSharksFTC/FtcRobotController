@@ -19,7 +19,7 @@ public class RI30HChassis {
     public RI30HChassis(HardwareMap hardwareMap){
         imu = hardwareMap.get(IMU.class, "imu");
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
-                RevHubOrientationOnRobot.LogoFacingDirection.UP,
+                RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
                 RevHubOrientationOnRobot.UsbFacingDirection.FORWARD
         ));
         imu.initialize(parameters);
