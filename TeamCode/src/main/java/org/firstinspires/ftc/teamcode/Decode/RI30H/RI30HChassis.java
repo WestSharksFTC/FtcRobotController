@@ -10,7 +10,10 @@ import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
 public class RI30HChassis {
     // Declaração dos motores do chassi
-    DcMotor motorBL, motorBR, motorFL, motorFR;
+    DcMotor motorFL;
+    DcMotor motorFR;
+    DcMotor motorBL;
+    DcMotor motorBR;
 
     // Declaração da Unidade de Medição Inercial (IMU)
     IMU imu;
