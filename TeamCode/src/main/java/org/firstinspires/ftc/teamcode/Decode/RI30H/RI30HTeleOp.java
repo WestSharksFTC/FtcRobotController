@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.Decode.RI30H;
 
+import static android.os.SystemClock.sleep;
+
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -13,6 +15,7 @@ public class RI30HTeleOp extends OpMode {
     public void init(){
         chassis = new RI30HChassis(hardwareMap);
         outtake = new RI30HOuttake(hardwareMap);
+        outtake.servoBreak.setPosition(0);
     }
 
     @Override
@@ -22,7 +25,12 @@ public class RI30HTeleOp extends OpMode {
         telemetry.addLine("Posição do servo: " + outtake.servoBreak.getPosition());
         chassis.andar(gamepad1.left_stick_y, -gamepad1.right_stick_x, -gamepad1.left_stick_x, gamepad1.right_trigger, gamepad1.left_bumper);
         outtake.spin(gamepad2.left_stick_y);
-        outtake.servo(gamepad1.dpad_right, gamepad1.dpad_left);
+        outtake.servo(gamepad2.dpad_right, gamepad2.dpad_left);
+        if(gamepad1.dpad_up){
+            outtake.spin(-1);
+            sleep(5000);
+            outtake.servoAuto();
+        }
 
         telemetry.update();
     }
