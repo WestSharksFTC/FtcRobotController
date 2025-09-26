@@ -18,7 +18,7 @@ public class RI30HChassis {
     // Declaração da Unidade de Medição Inercial (IMU)
     IMU imu;
 
-    //Construtor da classe RI30HChassis.
+    //Construtor da classe RI30HChassisAUTO.
     public RI30HChassis(HardwareMap hardwareMap){
         imu = hardwareMap.get(IMU.class, "imu");
         IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
