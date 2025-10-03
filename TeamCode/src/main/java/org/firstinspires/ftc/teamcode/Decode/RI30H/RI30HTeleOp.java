@@ -15,21 +15,30 @@ public class RI30HTeleOp extends OpMode {
     public void init(){
         chassis = new RI30HChassis(hardwareMap);
         outtake = new RI30HOuttake(hardwareMap);
+        //posição inicial da trava das bolas
         outtake.servoBreak.setPosition(0);
     }
 
     @Override
     public void loop(){
+        //telemetrias
         telemetry.addLine("Angulo do robô: " + chassis.imu.getRobotYawPitchRollAngles().getYaw());
         telemetry.addLine("Velocidade do spinner: " + outtake.motorSpinner.getPower());
         telemetry.addLine("Posição do servo: " + outtake.servoBreak.getPosition());
+        //movimento
         chassis.andar(gamepad1.left_stick_y, -gamepad1.right_stick_x, -gamepad1.left_stick_x, gamepad1.right_trigger, gamepad1.left_bumper);
-        outtake.spin(gamepad2.left_stick_y);
+        //spinner
+        outtake.spin(gamepad2.left_stick_y * 0.8);
+        //trava de bolas
         outtake.servo(gamepad2.dpad_right, gamepad2.dpad_left);
+        //autônomo do outtake
         if(gamepad1.dpad_up){
             outtake.spin(-1);
             sleep(5000);
             outtake.servoAuto();
+        }
+        if(gamepad1.dpad_down){
+
         }
 
         telemetry.update();
