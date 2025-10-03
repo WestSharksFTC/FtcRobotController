@@ -53,10 +53,10 @@ public class Chassis extends OpMode {
 
         double drivePower = -(0.5 * gamepad1.right_trigger) + 1;
         
-        motorFL.setPower(drivePower * (drive + turn + strafe) / max);
-        motorFR.setPower(drivePower * (drive - turn - strafe) / max);
-        motorBL.setPower(drivePower * (drive + turn - strafe) / max);
-        motorBR.setPower(drivePower * (drive - turn + strafe) / max);
+        motorFL.setPower(drivePower * (drive + turn - strafe) / max);
+        motorFR.setPower(drivePower * (drive - turn + strafe) / max);
+        motorBL.setPower(drivePower * (-drive - turn - strafe) / max);
+        motorBR.setPower(drivePower * (-drive + turn + strafe) / max);
 
         telemetry.update();
     }
