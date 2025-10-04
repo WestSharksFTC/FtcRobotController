@@ -32,8 +32,7 @@ public class Chassis extends OpMode {
         motorBL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorBR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        motorFL.setDirection(DcMotorSimple.Direction.REVERSE);
-        motorBL.setDirection(DcMotorSimple.Direction.REVERSE);
+        motorFR.setDirection(DcMotorSimple.Direction.REVERSE);
 
         telemetry.addData("Hardware: ", "Initialized");
     }
@@ -45,18 +44,18 @@ public class Chassis extends OpMode {
     public void loop(){
         telemetry.addData("Hardware: ", "Running");
 
-        double drive = -gamepad1.left_stick_y;  // frente e atrás
-        double turn = -gamepad1.right_stick_x;  // gira
+        double drive = gamepad1.left_stick_y;  // frente e atrás
+        double turn = gamepad1.right_stick_x;  // gira
         double strafe = gamepad1.left_stick_x; // direita e esquerda
 
         double max = Math.max(Math.abs(strafe) + Math.abs(drive) + Math.abs(turn), 1);
 
         double drivePower = -(0.5 * gamepad1.right_trigger) + 1;
         
-        motorFL.setPower(drivePower * (drive + turn - strafe) / max);
-        motorFR.setPower(drivePower * (drive - turn + strafe) / max);
-        motorBL.setPower(drivePower * (-drive - turn - strafe) / max);
-        motorBR.setPower(drivePower * (-drive + turn + strafe) / max);
+        motorFL.setPower(drivePower * (drive - turn - strafe) / max);
+        motorFR.setPower(drivePower * (drive + turn + strafe) / max);
+        motorBL.setPower(drivePower * (-drive + turn - strafe) / max);
+        motorBR.setPower(drivePower * (-drive - turn + strafe) / max);
 
         telemetry.update();
     }

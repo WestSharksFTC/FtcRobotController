@@ -1,32 +1,18 @@
-package org.firstinspires.ftc.teamcode.Decode.RI30H;
+package org.firstinspires.ftc.teamcode.Decode.RampRobot;
 
-import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.IMU;
 
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
-
-public class RI30HChassis {
+public class RampRobotChassis {
     // Declaração dos motores do chassi
     DcMotor motorFL;
     DcMotor motorFR;
     DcMotor motorBL;
     DcMotor motorBR;
 
-    // Declaração da Unidade de Medição Inercial (IMU)
-    IMU imu;
-
     //Construtor da classe RI30HChassisAUTO.
-    public RI30HChassis(HardwareMap hardwareMap){
-        imu = hardwareMap.get(IMU.class, "imu");
-        IMU.Parameters parameters = new IMU.Parameters(new RevHubOrientationOnRobot(
-                RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
-                RevHubOrientationOnRobot.UsbFacingDirection.FORWARD
-        ));
-        imu.initialize(parameters);
-
+    public RampRobotChassis(HardwareMap hardwareMap){
         // Mapeia os motores do chassi pelos seus nomes de configuração no hardwareMap.
         motorFL = hardwareMap.get(DcMotor.class, "FL"); // Motor Frontal Esquerdo
         motorFR = hardwareMap.get(DcMotor.class, "FR"); // Motor Frontal Direito
@@ -45,36 +31,19 @@ public class RI30HChassis {
         motorBL.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorBR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        // Inverte a direção dos motores do lado esquerdo para que todos os motores girem na direção correta para o movimento.
-        motorFL.setDirection(DcMotorSimple.Direction.REVERSE);
-        motorBL.setDirection(DcMotorSimple.Direction.REVERSE);
+        // Inverte a direção do motor frontal direito para que ele gire na direção correta para o movimento.
+        motorFR.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
-    public void andar(double drive, double turn, double strafe, double powerReduction, boolean imuReset){
-        // Normaliza os valores de entrada para evitar que a potência exceda 1.
+    public void andar(double drive, double turn, double strafe, double powerReduction){
+
         double max = Math.max(Math.abs(strafe) + Math.abs(drive) + Math.abs(turn), 1);
 
-        // Calcula o fator de redução de potência. powerReduction deve ser um valor entre 0 e 1.
-        // Ex: se powerReduction=0, drivePower=1; se powerReduction=1, drivePower=0.5
         double drivePower = -(0.5 * powerReduction) + 1;
 
-        // Reseta o yaw da IMU se imuReset for verdadeiro.
-        if(imuReset){
-            imu.resetYaw();
-        }
-
-        // Obtém o heading atual do robô em radianos a partir da IMU.
-        double heading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
-
-        // Ajusta os valores de drive e strafe com base no heading do robô (field-centric drive).
-        // Isso permite que o robô se mova em relação ao campo, independentemente de sua orientação.
-        double adjustedStrafe = drive * Math.sin(heading) + strafe * Math.cos(heading);
-        double adjustedDrive = drive * Math.cos(heading) - strafe * Math.sin(heading);
-
-        // Calcula e define a potência para cada motor, normalizando pelo valor máximo.
-        motorFL.setPower(((adjustedDrive + adjustedStrafe + turn) / max) * drivePower);
-        motorFR.setPower(((adjustedDrive - adjustedStrafe - turn) / max) * drivePower);
-        motorBL.setPower(((adjustedDrive - adjustedStrafe + turn) / max) * drivePower);
-        motorBR.setPower(((adjustedDrive + adjustedStrafe - turn) / max) * drivePower);
+        motorFL.setPower(drivePower * (drive - turn - strafe) / max);
+        motorFR.setPower(drivePower * (drive + turn + strafe) / max);
+        motorBL.setPower(drivePower * (-drive + turn - strafe) / max);
+        motorBR.setPower(drivePower * (-drive - turn + strafe) / max);
     }
 }
