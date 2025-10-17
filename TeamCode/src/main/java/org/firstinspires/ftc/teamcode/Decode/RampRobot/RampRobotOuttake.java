@@ -13,7 +13,7 @@ public class RampRobotOuttake {
 
     public void runOuttake(boolean one, boolean two, boolean three, boolean four){
         if(one){
-            outtake.setPower(0.25);
+            outtake.setPower(0);
         }else if(two){
             outtake.setPower(0.5);
         }else if(three){
