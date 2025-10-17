@@ -32,7 +32,6 @@ public class RampRobotChassis {
         motorBR.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
         // Inverte a direção do motor frontal direito para que ele gire na direção correta para o movimento.
-        motorFR.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
     public void andar(double drive, double turn, double strafe, double powerReduction){
