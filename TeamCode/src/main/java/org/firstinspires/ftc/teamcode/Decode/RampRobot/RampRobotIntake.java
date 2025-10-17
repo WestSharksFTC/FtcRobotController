@@ -14,7 +14,7 @@ public class RampRobotIntake {
 
     public void runIntake(boolean one, boolean two, boolean three, boolean four){
         if(one){
-            intake.setPower(0.25);
+            intake.setPower(0);
         }else if(two){
             intake.setPower(0.5);
         }else if(three){
