@@ -27,17 +27,11 @@ public class RampRobotTeleOp extends OpMode {
         //movimento
         chassis.andar(gamepad1.left_stick_y, gamepad1.right_stick_x, gamepad1.left_stick_x, gamepad1.right_trigger);
 
-        //entrada das bolas
-        intake.servo(true, false);
+        //Intake
+        intake.runIntake(gamepad1.dpad_right, gamepad1.dpad_down, gamepad1.dpad_left, gamepad1.dpad_up);
 
-        //saida das bolas
-        if(gamepad1.dpad_up){
-            outtake.spin(1, -1);
-        }else if(gamepad1.dpad_down){
-            outtake.spin(-1, 1);
-        }else{
-            outtake.spin(0, 0);
-        }
+        //Outtake
+        outtake.runOuttake(gamepad2.dpad_right, gamepad2.dpad_down, gamepad2.dpad_left, gamepad2.dpad_up);
 
         telemetry.update();
     }

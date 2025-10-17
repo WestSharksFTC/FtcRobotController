@@ -1,20 +1,26 @@
 package org.firstinspires.ftc.teamcode.Decode.RampRobot;
 
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.Servo;
 
 public class RampRobotIntake {
-    Servo servoG;
+    DcMotor intake;
     public RampRobotIntake(HardwareMap hardwareMap) {
-        servoG = hardwareMap.get(Servo.class, "Servo"); // Motor da trava das bolas
+        intake = hardwareMap.get(DcMotor.class, "IN");
+        intake.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
+        intake.setDirection(DcMotorSimple.Direction.REVERSE);
     }
 
-    //trava manual das bolas
-    public void servo(boolean left, boolean right){
-        if(left){
-            servoG.setPosition(0);
-        }else if(right){
-            servoG.setPosition(0.5);
+    public void runIntake(boolean one, boolean two, boolean three, boolean four){
+        if(one){
+            intake.setPower(0.25);
+        }else if(two){
+            intake.setPower(0.5);
+        }else if(three){
+            intake.setPower(0.75);
+        } else if(four){
+            intake.setPower(1);
         }
     }
 }
