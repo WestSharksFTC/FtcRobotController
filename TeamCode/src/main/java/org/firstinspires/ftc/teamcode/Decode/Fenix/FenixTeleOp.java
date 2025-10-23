@@ -19,11 +19,11 @@ public class FenixTeleOp extends OpMode {
 
     @Override
     public void loop(){
-        //telemetrias
+        //Telemetrias
         telemetry.addData("Hardware: ", "Running");
 
-        //movimento
-        chassis.andar(gamepad1.left_stick_y, gamepad1.right_stick_x, gamepad1.left_stick_x, gamepad1.right_trigger);
+        //Movimento
+        chassis.run(gamepad1.left_stick_y, gamepad1.right_stick_x, gamepad1.left_stick_x, gamepad1.right_trigger);
 
         //Intake
         intake.runIntake(gamepad1.dpad_right, gamepad1.dpad_down, gamepad1.dpad_left, gamepad1.dpad_up);
