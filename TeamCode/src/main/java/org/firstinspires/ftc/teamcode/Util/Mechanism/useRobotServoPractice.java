@@ -7,33 +7,26 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 public class useRobotServoPractice extends OpMode {
 
     robotServoPractice servo = new robotServoPractice();
-    double leftTrigger, rightTrigger;
+    double rightTrigger;
 
     @Override
     public void init() {
         servo.init(hardwareMap);
-        leftTrigger = 0.0;
-        rightTrigger = 0.0;
+        rightTrigger = 0.0;// continuo
     }
 
     @Override
     public void loop() {
-        leftTrigger = gamepad1.left_trigger;
-        rightTrigger = gamepad1.right_trigger;
-
-        servo.setServoPos(leftTrigger);
-        servo.setServoRot(rightTrigger);
+        rightTrigger = gamepad1.right_trigger; // continuo
 
         if(gamepad1.a){
-            servo.setServoPos(-1.0);
-        }else{
+            servo.setServoPos(0.0);
+        }else if(gamepad1.b) {
             servo.setServoPos(1.0);
         }
 
-        if(gamepad1.b){
-            servo.setServoRot(1.0);
-        }else{
-            servo.setServoRot(0);
-        }
+        servo.setServoRot(rightTrigger); // continuo
+
+
     }
 }
