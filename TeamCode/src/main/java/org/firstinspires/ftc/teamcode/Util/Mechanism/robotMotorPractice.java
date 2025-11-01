@@ -25,4 +25,16 @@ public class robotMotorPractice {
     public double getMotorRevs() {
         return motor.getCurrentPosition() / ticksPerRev * 2; // normalize ticks to revolutions 2:1
     }
+
+    public void setMotorZeroBehavior(DcMotor.ZeroPowerBehavior zeroBehavior){
+        motor.setZeroPowerBehavior(zeroBehavior);
+    }
+
+    public void setMotorBrake(String brakeType){
+        if(brakeType.equals("BRAKE")){
+            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        }else if(brakeType.equals("FLOAT")){
+            motor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
+        }
+    }
 }
