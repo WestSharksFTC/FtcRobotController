@@ -11,9 +11,8 @@ public class robotColorSensorPractice {
     NormalizedColorSensor colorSensor;
 
     public enum DetectedColor{
-        RED,
-        BLUE,
-        YELLOW,
+        PURPLE,
+        GREEN,
         UNKNOWN
     }
 
@@ -43,6 +42,12 @@ public class robotColorSensorPractice {
 
          */
 
-        return DetectedColor.UNKNOWN;
+        if(normRed < 0.4 && normGreen < 0.45 && normBlue > 0.2){
+            return DetectedColor.PURPLE;
+        }else if(normRed < 0.2 && normGreen > 0.2 && normBlue > 0.2){
+            return DetectedColor.GREEN;
+        }else{
+            return DetectedColor.UNKNOWN;
+        }
     }
 }
