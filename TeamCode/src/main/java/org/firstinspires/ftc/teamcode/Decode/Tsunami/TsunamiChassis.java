@@ -9,7 +9,6 @@ import com.qualcomm.robotcore.hardware.IMU;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
-import org.opencv.core.Mat;
 
 public class TsunamiChassis {
     // Motores
@@ -20,6 +19,14 @@ public class TsunamiChassis {
 
     // Pinpoint
     private GoBildaPinpointDriver pinpoint;
+
+    // Constantes de Controle (Ganhos P)
+    private static final double KP_TRANSLATION = 0.05; // Ganho Proporcional para Translação (X e Y)
+    private static final double KP_ROTATION = 0.02; // Ganho Proporcional para Rotação (Heading)
+
+    // Tolerâncias para determinar quando o robô chegou ao destino
+    private static final double TRANSLATION_TOLERANCE_CM = 3.0; // Tolerância de posição em cm
+    private static final double HEADING_TOLERANCE_DEG = 2.0; // Tolerância de ângulo em graus
 
     public void init(HardwareMap hardwareMap){
         // Motores
@@ -99,45 +106,81 @@ public class TsunamiChassis {
         this.drive(newForward, newStrafe, rotate);
     }
 
-    public void goToPosition(double targetX, double targetY, double targetHeading){
-        this.update();
-        Pose2D currentPose = pinpoint.getPosition();
+    public void goToPosition(double targetX, double targetY, double targetHeading, boolean opModeIsActive) {
 
-        double currentX = currentPose.getX(DistanceUnit.CM);
-        double currentY = currentPose.getY(DistanceUnit.CM);
-        double currentHeading = currentPose.getHeading(AngleUnit.DEGREES);
+        // Loop de controle
+        while (opModeIsActive) {
+            // 1. Atualiza a posição atual
+            this.update();
+            Pose2D currentPose = pinpoint.getPosition();
 
-        // Calculo do erro
-        double errorX = targetX - currentX;
-        double errorY = targetY - currentY;
-        double errorHeading = targetHeading - currentHeading;
+            double currentX = currentPose.getX(DistanceUnit.CM);
+            double currentY = currentPose.getY(DistanceUnit.CM);
+            double currentHeading = currentPose.getHeading(AngleUnit.DEGREES);
 
-        // Converte o erro para o referencial do robô
-        double distance = Math.hypot(errorX, errorY);
-        double angleToTarget = Math.atan2(errorY, errorX) - Math.toRadians(currentHeading);
+            // 2. Cálculo do Erro de Translação
+            double errorX = targetX - currentX;
+            double errorY = targetY - currentY;
 
-        // Movimento no sistema do robô
-        double forward = distance * Math.cos(angleToTarget);
-        double strafe = distance * Math.sin(angleToTarget);
+            // Distância até o alvo
+            double distance = Math.hypot(errorX, errorY);
 
-        // Controladores proporcionais
-        double kP_lin = 0.05;
-        double kP_rot = 0.02;
+            // Verifica se chegamos ao destino (Tolerância de Translação)
+            if (distance < TRANSLATION_TOLERANCE_CM) {
+                // Se a translação estiver completa, verificamos a rotação
+                double errorHeading = AngleUnit.normalizeDegrees(targetHeading - currentHeading);
 
-        double forwardPower = kP_lin * forward;
-        double strafePower = kP_lin * strafe;
-        double rotatePower = kP_rot * errorHeading;
+                if (Math.abs(errorHeading) < HEADING_TOLERANCE_DEG) {
+                    // Parar o robô e sair do loop
+                    drive(0, 0, 0);
+                    break;
+                }
 
-        // Limitar potências
-        forwardPower = Math.max(-1, Math.min(1, forwardPower));
-        strafePower = Math.max(-1, Math.min(1, strafePower));
-        rotatePower = Math.max(-1, Math.min(1, rotatePower));
+                // Se a translação estiver completa, mas a rotação não, focamos apenas na rotação
+                double rotatePower = KP_ROTATION * errorHeading;
+                rotatePower = Math.max(-1, Math.min(1, rotatePower));
+                drive(0, 0, rotatePower);
+                continue; // Pula para a próxima iteração para continuar a rotação
+            }
 
-        this.drive(forwardPower, strafePower, rotatePower);
+            // 3. Cálculo do Ângulo de Movimento (Field-Relative)
+            // Este é o ângulo que o robô deve apontar para o alvo (em relação ao campo)
+            double angleToTarget = Math.atan2(errorY, errorX); // Em radianos
+
+            // 4. Conversão do Ângulo de Movimento para o Sistema do Robô
+            // O robô precisa se mover na direção do alvo, mas o cálculo de potência
+            // deve ser feito no sistema do robô (forward/strafe).
+            double movementAngle = AngleUnit.normalizeRadians(angleToTarget - Math.toRadians(currentHeading));
+
+            // 5. Cálculo da Potência de Translação (P-Controller)
+            // A potência é proporcional à distância restante
+            double drivePower = distance * KP_TRANSLATION;
+
+            // Limita a potência máxima (ex: 0.8)
+            drivePower = Math.min(drivePower, 0.8);
+
+            // 6. Projeção da Potência no Sistema do Robô
+            double forwardPower = drivePower * Math.cos(movementAngle);
+            double strafePower = drivePower * Math.sin(movementAngle);
+
+            // 7. Cálculo da Potência de Rotação (P-Controller)
+            // O robô tenta manter o ângulo final desejado (targetHeading) enquanto se move.
+            double errorHeading = AngleUnit.normalizeDegrees(targetHeading - currentHeading);
+            double rotatePower = KP_ROTATION * errorHeading;
+
+            // 8. Limitar e Aplicar Potências
+            forwardPower = Math.max(-1, Math.min(1, forwardPower));
+            strafePower = Math.max(-1, Math.min(1, strafePower));
+            rotatePower = Math.max(-1, Math.min(1, rotatePower));
+
+            this.drive(forwardPower, strafePower, rotatePower);
+        }
+
+        // Parar o robô após sair do loop
+        drive(0, 0, 0);
     }
 
     public Pose2D getPose() {
         return pinpoint.getPosition();
     }
 }
-
