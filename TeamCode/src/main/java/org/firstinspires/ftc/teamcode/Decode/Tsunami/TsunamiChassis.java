@@ -6,6 +6,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 
+import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
@@ -21,8 +22,8 @@ public class TsunamiChassis {
     private GoBildaPinpointDriver pinpoint;
 
     // Constantes de Controle (Ganhos P)
-    private static final double KP_TRANSLATION = 0.05; // Ganho Proporcional para Translação (X e Y)
-    private static final double KP_ROTATION = 0.02; // Ganho Proporcional para Rotação (Heading)
+    private static final double KP_TRANSLATION = 0.02; // Ganho Proporcional para Translação (X e Y)
+    private static final double KP_ROTATION = 0.01; // Ganho Proporcional para Rotação (Heading)
 
     // Tolerâncias para determinar quando o robô chegou ao destino
     private static final double TRANSLATION_TOLERANCE_CM = 3.0; // Tolerância de posição em cm
@@ -43,12 +44,17 @@ public class TsunamiChassis {
         frontRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         backRightMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
+        frontLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        frontRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        backRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+
         // IMU
         imu = hardwareMap.get(IMU.class, "imu");
 
         RevHubOrientationOnRobot RevOrientation = new RevHubOrientationOnRobot(
-                RevHubOrientationOnRobot.LogoFacingDirection.RIGHT,
-                RevHubOrientationOnRobot.UsbFacingDirection.UP
+                RevHubOrientationOnRobot.LogoFacingDirection.LEFT,
+                RevHubOrientationOnRobot.UsbFacingDirection.DOWN
         );
 
         imu.initialize(new IMU.Parameters(RevOrientation));
@@ -56,7 +62,7 @@ public class TsunamiChassis {
         // Pinpoint
         pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
 
-        pinpoint.setOffsets(-85.0, -160.0, DistanceUnit.MM);
+        pinpoint.setOffsets(190.0, -200.0, DistanceUnit.MM);
 
         pinpoint.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_SWINGARM_POD);
 
@@ -72,6 +78,28 @@ public class TsunamiChassis {
 
     public void update(){
         pinpoint.update();
+    }
+
+    public double getOdometryX(){
+        double eixoX = pinpoint.getPosition().getX(DistanceUnit.CM);
+
+        return eixoX;
+    }
+
+    public double getOdometryY(){
+        double eixoY = pinpoint.getPosition().getY(DistanceUnit.CM);
+
+        return eixoY;
+    }
+
+    public double getOdometryAngle(){
+        double angulo = pinpoint.getPosition().getHeading(AngleUnit.DEGREES);
+
+        return angulo;
+    }
+
+    public double getRobotAngle(){
+        return imu.getRobotYawPitchRollAngles().getYaw();
     }
 
     public void drive(double forward, double strafe, double rotate){
@@ -94,7 +122,12 @@ public class TsunamiChassis {
         backRightMotor.setPower(maxSpeed * (backRightPower / maxPower));
     }
 
-    public void driveFieldRelative(double forward, double strafe, double rotate){
+    public void driveFieldRelative(double forward, double strafe, double rotate, boolean imuReset){
+        // Reseta o yaw da IMU se imuReset for verdadeiro.
+        if(imuReset){
+            imu.resetYaw();
+        }
+
         double theta = Math.atan2(forward, strafe);
         double r = Math.hypot(strafe, forward);
 
@@ -157,16 +190,16 @@ public class TsunamiChassis {
             double drivePower = distance * KP_TRANSLATION;
 
             // Limita a potência máxima (ex: 0.8)
-            drivePower = Math.min(drivePower, 0.8);
+            drivePower = Math.min(drivePower, 0.5);
 
             // 6. Projeção da Potência no Sistema do Robô
-            double forwardPower = drivePower * Math.cos(movementAngle);
-            double strafePower = drivePower * Math.sin(movementAngle);
+            double forwardPower = drivePower * Math.sin(movementAngle);
+            double strafePower = drivePower * Math.cos(movementAngle);
 
             // 7. Cálculo da Potência de Rotação (P-Controller)
             // O robô tenta manter o ângulo final desejado (targetHeading) enquanto se move.
-            double errorHeading = AngleUnit.normalizeDegrees(targetHeading - currentHeading);
-            double rotatePower = KP_ROTATION * errorHeading;
+            double errorHeadingRad = AngleUnit.normalizeRadians(Math.toRadians(targetHeading) - Math.toRadians(currentHeading));
+            double rotatePower = KP_ROTATION * errorHeadingRad;
 
             // 8. Limitar e Aplicar Potências
             forwardPower = Math.max(-1, Math.min(1, forwardPower));

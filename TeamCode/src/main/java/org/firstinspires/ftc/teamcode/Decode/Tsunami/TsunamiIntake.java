@@ -1,0 +1,43 @@
+package org.firstinspires.ftc.teamcode.Decode.Tsunami;
+
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.Servo;
+
+import org.firstinspires.ftc.robotcore.external.Telemetry;
+
+public class TsunamiIntake {
+
+    private DcMotor motorIn;
+    private Servo servoRampL;
+    private Servo servoRampR;
+
+    public void init(HardwareMap hardwareMap){
+        motorIn = hardwareMap.get(DcMotor.class, "motorIntake");
+        motorIn.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorIn.setDirection(DcMotor.Direction.REVERSE);
+
+        servoRampL = hardwareMap.get(Servo.class, "servoRampLeft");
+        servoRampR = hardwareMap.get(Servo.class, "servoRampRight");
+
+        servoRampL.setPosition(0.0);
+        servoRampR.setPosition(1.0);
+    }
+
+    public void setPowerMotorIn(double power) {
+        motorIn.setPower(power);
+    }
+
+    public void setServoPos(double angle){
+        servoRampL.setPosition(angle);
+        servoRampR.setPosition(1 - angle);
+    }
+
+    public void getServoPos(Telemetry telemetry){
+        double servoLeftPos = servoRampL.getPosition();
+        double servoRightPos = servoRampR.getPosition();
+
+        telemetry.addData("Servo Esquerdo", servoLeftPos);
+        telemetry.addData("Servo Direito", servoRightPos);
+    }
+}

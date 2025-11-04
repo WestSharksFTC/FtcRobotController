@@ -3,30 +3,40 @@ package org.firstinspires.ftc.teamcode.Util;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 @TeleOp
 public class unitTest extends OpMode {
 
-    DcMotor motor;
+    DcMotor motorL;
+    DcMotor motorR;
 
     @Override
     public void init() {
-        motor = hardwareMap.get(DcMotor.class, "motor");
+        motorL = hardwareMap.get(DcMotor.class, "motorL");
+        motorR = hardwareMap.get(DcMotor.class, "motorR");
 
-        motor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorL.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorR.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
-        telemetry.addData("Hardware: ", "Initialized");
+        motorR.setDirection(DcMotor.Direction.REVERSE);
+
+        telemetry.addData("Hardware", "Initialized");
     }
 
     @Override
     public void loop() {
         telemetry.addData("Hardware", "Running");
 
-        double velocity = motor.getPower();
-        telemetry.addData("Velocidade", velocity);
+        double velocityLeft = motorL.getPower();
+        double velocityRight = motorR.getPower();
+
+        telemetry.addData("Velocidade", velocityLeft);
+        telemetry.addData("Velocidade", velocityRight);
 
         double speed = gamepad1.left_stick_y;
 
-        motor.setPower(speed);
+        motorL.setPower(speed);
+        motorR.setPower(speed);
     }
 }

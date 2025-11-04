@@ -15,9 +15,9 @@ public class TsunamiAutonomous extends LinearOpMode {
         waitForStart();
 
         if (opModeIsActive()) {
-            drive.goToPosition(100, 200, 90, opModeIsActive());
+            drive.goToPosition(0, 20, 0, opModeIsActive());
 
-            drive.goToPosition(200, 200, 0, opModeIsActive());
+            sleep(5000);
         }
     }
 }
