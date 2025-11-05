@@ -20,8 +20,13 @@ public class TsunamiIntake {
         servoRampL = hardwareMap.get(Servo.class, "servoRampLeft");
         servoRampR = hardwareMap.get(Servo.class, "servoRampRight");
 
+        servoRampR.setDirection(Servo.Direction.REVERSE);
+
+        servoRampL.scaleRange(0.0, 0.85);
+        servoRampR.scaleRange(0.0, 0.85);
+
         servoRampL.setPosition(0.0);
-        servoRampR.setPosition(1.0);
+        servoRampR.setPosition(0.0);
     }
 
     public void setPowerMotorIn(double power) {
@@ -30,7 +35,7 @@ public class TsunamiIntake {
 
     public void setServoPos(double angle){
         servoRampL.setPosition(angle);
-        servoRampR.setPosition(1 - angle);
+        servoRampR.setPosition(angle);
     }
 
     public void getServoPos(Telemetry telemetry){

@@ -82,18 +82,21 @@ public class TsunamiChassis {
 
     public double getOdometryX(){
         double eixoX = pinpoint.getPosition().getX(DistanceUnit.CM);
+        pinpoint.update();
 
         return eixoX;
     }
 
     public double getOdometryY(){
         double eixoY = pinpoint.getPosition().getY(DistanceUnit.CM);
+        pinpoint.update();
 
         return eixoY;
     }
 
     public double getOdometryAngle(){
         double angulo = pinpoint.getPosition().getHeading(AngleUnit.DEGREES);
+        pinpoint.update();
 
         return angulo;
     }
