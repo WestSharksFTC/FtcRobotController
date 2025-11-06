@@ -36,15 +36,15 @@ public class robotColorSensorPractice {
 
         /*
 
-        PURPLE = R= <.4, G= <.45, B= >.2
+        PURPLE = R= <.4, G= <.45, B= >.85
 
-        GREEN = R= <.2 ,G= >.2 ,B= >.2
+        GREEN = R= <.2 ,G= >.2 ,B= <.85
 
          */
 
-        if(normRed < 0.4 && normGreen < 0.45 && normBlue > 0.2){
+        if(normRed > 0.3 && normGreen < 0.65 && normBlue > 0.85){
             return DetectedColor.PURPLE;
-        }else if(normRed < 0.2 && normGreen > 0.2 && normBlue > 0.2){
+        }else if(normRed < 0.3 && normGreen > 0.65 && normBlue < 0.85){
             return DetectedColor.GREEN;
         }else{
             return DetectedColor.UNKNOWN;

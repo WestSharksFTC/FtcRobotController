@@ -15,6 +15,9 @@ public class TsunamiIntake {
 
     private int positionIndexer = 0;
 
+    private static final int idexerInPos1 = 0, idexerInPos2 = 121, idexerInPos3 = 242;
+    private static final int idexerOutPos1 = 182, idexerOutPos2 = 303, idexerOutPos3 = 424;
+
     public void init(HardwareMap hardwareMap){
         motorIn = hardwareMap.get(DcMotor.class, "motorIntake");
         motorIn.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -41,10 +44,14 @@ public class TsunamiIntake {
         servoRampR.setPosition(0.0);
     }
 
+
+    // Motor do intake para a coleta dos objetos de jogo
     public void setPowerMotorIn(double power) {
         motorIn.setPower(power);
     }
 
+
+    // Servos da rampa que movem o objeto de jogo do seletor de cor para o outtake
     public void setServoPos(double angle){
         servoRampL.setPosition(angle);
         servoRampR.setPosition(angle);
@@ -58,12 +65,42 @@ public class TsunamiIntake {
         telemetry.addData("Servo Direito", servoRightPos);
     }
 
+
+    // Motor do seletor de cor para movimentar para a posição dos objetos de jogo
+    public int getPositionIndexer(){
+        return motorIndexer.getCurrentPosition();
+    }
+
     public void setMotorIndexer(){
         positionIndexer += 121;
         motorIndexer.setTargetPosition(positionIndexer);
     }
 
-    public int getPositionIndexer(){
-        return motorIndexer.getCurrentPosition();
+
+    // Posições para o intake
+    public void goToInPos1(){
+        motorIndexer.setTargetPosition(idexerInPos1);
+    }
+
+    public void goToInPos2(){
+        motorIndexer.setTargetPosition(idexerInPos2);
+    }
+
+    public void goToInPos3(){
+        motorIndexer.setTargetPosition(idexerInPos3);
+    }
+
+
+    // Posições para o outtake
+    public void goToOutPos1(){
+        motorIndexer.setTargetPosition(idexerOutPos1);
+    }
+
+    public void goToOutPos2(){
+        motorIndexer.setTargetPosition(idexerOutPos2);
+    }
+
+    public void goToOutPos3(){
+        motorIndexer.setTargetPosition(idexerOutPos3);
     }
 }
