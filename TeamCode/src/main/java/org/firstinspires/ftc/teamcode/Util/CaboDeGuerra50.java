@@ -1,10 +1,11 @@
 package org.firstinspires.ftc.teamcode.Util;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.DcMotor;
 
-//@Disabled
+@Disabled
 @TeleOp
 public class CaboDeGuerra50 extends OpMode {
     DcMotor motor;

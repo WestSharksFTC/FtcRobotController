@@ -40,10 +40,8 @@ public class TsunamiTeleOp extends OpMode {
             intake.setServoPos(0.30);
         }
 
-        if(gamepad1.dpad_left) {
-            intake.setPowerMotorIn(0.0);
-        }else if(gamepad1.dpad_right){
-            intake.setPowerMotorIn(0.5);
+        if(gamepad1.dpadRightWasPressed()) {
+            intake.setMotorIndexer();
         }
 
         if(gamepad1.a) {
@@ -60,5 +58,7 @@ public class TsunamiTeleOp extends OpMode {
         telemetry.addData("Odometria X", drive.getOdometryX());
         telemetry.addData("Odometria X", drive.getOdometryY());
         telemetry.addData("Odometria X", drive.getOdometryAngle());
+
+        telemetry.addData("Posição do indexer", intake.getPositionIndexer());
     }
 }

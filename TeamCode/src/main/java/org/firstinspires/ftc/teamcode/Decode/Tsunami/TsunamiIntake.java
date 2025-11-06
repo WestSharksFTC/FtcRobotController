@@ -13,6 +13,8 @@ public class TsunamiIntake {
     private Servo servoRampL;
     private Servo servoRampR;
 
+    private int positionIndexer = 0;
+
     public void init(HardwareMap hardwareMap){
         motorIn = hardwareMap.get(DcMotor.class, "motorIntake");
         motorIn.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -22,8 +24,10 @@ public class TsunamiIntake {
         motorIndexer.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorIndexer.setPower(0.0);
         motorIndexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        motorIndexer.setMode(DcMotor.RunMode.RUN_TO_POSITION);
         motorIndexer.setTargetPosition(0);
+        motorIndexer.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorIndexer.setPower(0.75);
+
 
         servoRampL = hardwareMap.get(Servo.class, "servoRampLeft");
         servoRampR = hardwareMap.get(Servo.class, "servoRampRight");
@@ -55,6 +59,11 @@ public class TsunamiIntake {
     }
 
     public void setMotorIndexer(){
-        double position;
+        positionIndexer += 121;
+        motorIndexer.setTargetPosition(positionIndexer);
+    }
+
+    public int getPositionIndexer(){
+        return motorIndexer.getCurrentPosition();
     }
 }

@@ -1,10 +1,12 @@
 package org.firstinspires.ftc.teamcode.Util.Mechanism;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
+@Disabled
 @TeleOp
 public class useRobotIMUPractice extends OpMode {
     robotIMUPractice test = new robotIMUPractice();

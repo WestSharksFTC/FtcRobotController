@@ -2,9 +2,11 @@ package org.firstinspires.ftc.teamcode.Decode.RI30H;
 
 import static android.os.SystemClock.sleep;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+@Disabled
 @TeleOp
 public class RI30HTeleOp extends OpMode {
     //instanciando as classes
