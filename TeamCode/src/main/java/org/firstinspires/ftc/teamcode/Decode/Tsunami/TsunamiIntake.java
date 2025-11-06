@@ -9,6 +9,7 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 public class TsunamiIntake {
 
     private DcMotor motorIn;
+    private DcMotor motorIndexer;
     private Servo servoRampL;
     private Servo servoRampR;
 
@@ -16,6 +17,13 @@ public class TsunamiIntake {
         motorIn = hardwareMap.get(DcMotor.class, "motorIntake");
         motorIn.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorIn.setDirection(DcMotor.Direction.REVERSE);
+
+        motorIndexer = hardwareMap.get(DcMotor.class, "motor_indexer");
+        motorIndexer.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        motorIndexer.setPower(0.0);
+        motorIndexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        motorIndexer.setMode(DcMotor.RunMode.RUN_TO_POSITION);
+        motorIndexer.setTargetPosition(0);
 
         servoRampL = hardwareMap.get(Servo.class, "servoRampLeft");
         servoRampR = hardwareMap.get(Servo.class, "servoRampRight");
@@ -44,5 +52,9 @@ public class TsunamiIntake {
 
         telemetry.addData("Servo Esquerdo", servoLeftPos);
         telemetry.addData("Servo Direito", servoRightPos);
+    }
+
+    public void setMotorIndexer(){
+        double position;
     }
 }
