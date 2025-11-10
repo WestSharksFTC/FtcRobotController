@@ -29,21 +29,21 @@ public class TsunamiTeleOp extends OpMode {
 
         drive.driveFieldRelative(forward, strafe, turn, imuReset);
 
-
+// PAU NO CU DO AUGUSTO
         // Gamepad 2 - Subsistemas
         motorIntake = gamepad2.left_trigger;
         motorOuttake = gamepad2.right_trigger;
 
         intake.setPowerMotorIn(motorIntake);
-
+// PINTO
         outtake.setOuttakePower(motorOuttake);
-
+// GROSSO
         if(gamepad2.dpad_down) {
             intake.setServoPos(0.0);
         }else if(gamepad2.dpad_up){
             intake.setServoPos(0.30);
         }
-
+// FODA MLK, SUCESSO AI.
         if(gamepad2.dpadRightWasPressed()) {
             intake.setMotorIndexer();
         }
@@ -79,3 +79,4 @@ public class TsunamiTeleOp extends OpMode {
         telemetry.addLine();
     }
 }
+// EU SOU INEVITAVEL

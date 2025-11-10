@@ -19,7 +19,7 @@ public class TsunamiIntake {
     private static final int idexerOutPos1 = 182, idexerOutPos2 = 303, idexerOutPos3 = 424;
 
     public void init(HardwareMap hardwareMap){
-        motorIn = hardwareMap.get(DcMotor.class, "motorIntake");
+        motorIn = hardwareMap.get(DcMotor.class, "motor_intake");
         motorIn.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorIn.setDirection(DcMotor.Direction.REVERSE);
 
@@ -32,8 +32,8 @@ public class TsunamiIntake {
         motorIndexer.setPower(0.75);
 
 
-        servoRampL = hardwareMap.get(Servo.class, "servoRampLeft");
-        servoRampR = hardwareMap.get(Servo.class, "servoRampRight");
+        servoRampL = hardwareMap.get(Servo.class, "servo_ramp_left");
+        servoRampR = hardwareMap.get(Servo.class, "servo_ramp_right");
 
         servoRampR.setDirection(Servo.Direction.REVERSE);
 
