@@ -1,15 +1,20 @@
 package org.firstinspires.ftc.teamcode.Decode.Tsunami;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
+@Disabled
 @TeleOp
 public class TsunamiTeleOp extends OpMode {
     TsunamiChassis drive = new TsunamiChassis();
     TsunamiIntake intake = new TsunamiIntake();
     TsunamiOuttake outtake = new TsunamiOuttake();
+
+    TsunamiIntake.DetectedColor detectedColor;
+
     double forward, strafe, turn, motorIntake, motorOuttake, robotAngle;
-    boolean imuReset;
+    boolean imuReset, autoIndexer, turnIndexer;
 
     @Override
     public void init() {
@@ -29,39 +34,36 @@ public class TsunamiTeleOp extends OpMode {
 
         drive.driveFieldRelative(forward, strafe, turn, imuReset);
 
-// PAU NO CU DO AUGUSTO
         // Gamepad 2 - Subsistemas
         motorIntake = gamepad2.left_trigger;
         motorOuttake = gamepad2.right_trigger;
+        autoIndexer = gamepad2.aWasPressed();
+        turnIndexer = gamepad2.dpadRightWasPressed();
 
         intake.setPowerMotorIn(motorIntake);
-// PINTO
         outtake.setOuttakePower(motorOuttake);
-// GROSSO
+
         if(gamepad2.dpad_down) {
             intake.setServoPos(0.0);
         }else if(gamepad2.dpad_up){
-            intake.setServoPos(0.30);
+            intake.setServoPos(0.40);
         }
-// FODA MLK, SUCESSO AI.
-        if(gamepad2.dpadRightWasPressed()) {
+
+        if(turnIndexer) {
             intake.setMotorIndexer();
         }
 
-        if(gamepad2.x){
-            intake.goToInPos1();
-        }else if(gamepad2.y){
-            intake.goToInPos2();
-        }else if(gamepad2.a){
-            intake.goToOutPos1();
-        }else if(gamepad2.b){
-            intake.goToOutPos2();
-        }
 
 
         // Telemetrias
         telemetry.addLine("POSIÇÃO DO SELETOR DE COR");
         telemetry.addData("Posição do indexer", intake.getPositionIndexer());
+        telemetry.addLine();
+
+        telemetry.addLine("COR DETECTADA PELO SENSOR");
+        telemetry.addData("Color Detected", detectedColor);
+        telemetry.addLine();
+        detectedColor = intake.getDetectedColor(telemetry);
         telemetry.addLine();
 
         telemetry.addLine("POSIÇÕES DO SERVO DA RAMPA");
@@ -79,4 +81,3 @@ public class TsunamiTeleOp extends OpMode {
         telemetry.addLine();
     }
 }
-// EU SOU INEVITAVEL

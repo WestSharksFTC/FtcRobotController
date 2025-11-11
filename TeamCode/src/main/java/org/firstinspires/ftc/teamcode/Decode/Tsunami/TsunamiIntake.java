@@ -2,7 +2,10 @@ package org.firstinspires.ftc.teamcode.Decode.Tsunami;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
+import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.Servo;
+import static android.os.SystemClock.sleep;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
@@ -15,10 +18,38 @@ public class TsunamiIntake {
 
     private int positionIndexer = 0;
 
-    private static final int idexerInPos1 = 0, idexerInPos2 = 121, idexerInPos3 = 242;
-    private static final int idexerOutPos1 = 182, idexerOutPos2 = 303, idexerOutPos3 = 424;
+    private static final int idexerInPos1 = 0, idexerInPos2 = 170, idexerInPos3 = 340;
+    private static final int idexerOutPos1 = 255, idexerOutPos2 = 425, idexerOutPos3 = 595;
+
+    NormalizedColorSensor colorSensor;
+
+    public enum DetectedColor{
+        PURPLE,
+        GREEN,
+        UNKNOWN
+    }
+
+    public enum IntakeState{
+        INIT,
+        MOVING_TO_POS1,
+        POS1,
+        MOVING_TO_POS2,
+        POS2,
+        MOVING_TO_POS3,
+        POS3,
+        DONE
+    }
+
+    DetectedColor detectedColor;
+
+    IntakeState state;
 
     public void init(HardwareMap hardwareMap){
+        colorSensor = hardwareMap.get(NormalizedColorSensor.class, "sensor_color");
+        colorSensor.setGain(15);
+
+        state = IntakeState.INIT;
+
         motorIn = hardwareMap.get(DcMotor.class, "motor_intake");
         motorIn.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         motorIn.setDirection(DcMotor.Direction.REVERSE);
@@ -29,7 +60,7 @@ public class TsunamiIntake {
         motorIndexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motorIndexer.setTargetPosition(0);
         motorIndexer.setMode(DcMotor.RunMode.RUN_TO_POSITION);
-        motorIndexer.setPower(0.75);
+        motorIndexer.setPower(0.3);
 
 
         servoRampL = hardwareMap.get(Servo.class, "servo_ramp_left");
@@ -44,6 +75,86 @@ public class TsunamiIntake {
         servoRampR.setPosition(0.0);
     }
 
+    // Sensor de cor
+    public TsunamiIntake.DetectedColor getDetectedColor(Telemetry telemetry){
+        NormalizedRGBA colors = colorSensor.getNormalizedColors(); // return 4 values
+
+        float normRed, normGreen, normBlue;
+        normRed = colors.red / colors.alpha;
+        normGreen = colors.green / colors.alpha;
+        normBlue = colors.blue / colors.alpha;
+
+        telemetry.addData("red", normRed);
+        telemetry.addData("green", normGreen);
+        telemetry.addData("blue", normBlue);
+        telemetry.addData("alpha", colors.alpha);
+
+        /*
+
+        PURPLE = R= <.4, G= <.45, B= >.85
+
+        GREEN = R= <.2 ,G= >.2 ,B= <.85
+
+         */
+
+        if(normRed > 0.3 && normGreen < 0.65 && normBlue > 0.85){
+            return TsunamiIntake.DetectedColor.PURPLE;
+        }else if(normRed < 0.3 && normGreen > 0.65 && normBlue < 0.85){
+            return TsunamiIntake.DetectedColor.GREEN;
+        }else{
+            return TsunamiIntake.DetectedColor.UNKNOWN;
+        }
+    }
+
+    public void runAutoIntake(){
+        switch(state){
+            case INIT:
+                this.goToInPos1();
+                this.setPowerMotorIn(0.5);
+                state = IntakeState.MOVING_TO_POS1;
+                break;
+            case MOVING_TO_POS1:
+                if (!motorIndexer.isBusy()) {
+                    state = IntakeState.POS1;
+                }
+                break;
+            case POS1:
+                this.setPowerMotorIn(0.5);
+                if(detectedColor == DetectedColor.PURPLE || detectedColor == DetectedColor.GREEN){
+                    this.goToInPos2();
+                    state = IntakeState.MOVING_TO_POS2;
+                }
+                break;
+            case MOVING_TO_POS2:
+                if (!motorIndexer.isBusy()) {
+                    state = IntakeState.POS2;
+                }
+                break;
+            case POS2:
+                this.setPowerMotorIn(0.5);
+                if(detectedColor == DetectedColor.PURPLE || detectedColor == DetectedColor.GREEN){
+                    this.goToInPos3();
+                    state = IntakeState.MOVING_TO_POS3;
+                }
+                break;
+            case MOVING_TO_POS3:
+                if (!motorIndexer.isBusy()) {
+                    state = IntakeState.POS3;
+                }
+                break;
+            case POS3:
+                this.setPowerMotorIn(0.5);
+                if(detectedColor == DetectedColor.PURPLE || detectedColor == DetectedColor.GREEN){
+                    this.setPowerMotorIn(0.2);
+                    state = IntakeState.DONE;
+                }
+                break;
+            case DONE:
+                break;
+            default:
+                break;
+        }
+    }
 
     // Motor do intake para a coleta dos objetos de jogo
     public void setPowerMotorIn(double power) {
@@ -72,7 +183,7 @@ public class TsunamiIntake {
     }
 
     public void setMotorIndexer(){
-        positionIndexer += 121;
+        positionIndexer += 170;
         motorIndexer.setTargetPosition(positionIndexer);
     }
 
