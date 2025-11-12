@@ -5,20 +5,20 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.NormalizedColorSensor;
 import com.qualcomm.robotcore.hardware.NormalizedRGBA;
 import com.qualcomm.robotcore.hardware.Servo;
-import static android.os.SystemClock.sleep;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 public class TsunamiIntake {
 
     private DcMotor motorIn;
-    private DcMotor motorIndexer;
+    public DcMotor motorIndexer;
     private Servo servoRampL;
     private Servo servoRampR;
 
     private int positionIndexer = 0;
 
-    private static final int idexerInPos1 = 0, idexerInPos2 = 170, idexerInPos3 = 340;
+    public int slot = 0;
+    private static final int idexerInPos1 = 0, idexerInPos2 = 170, idexerInPos3 = 350;
     private static final int idexerOutPos1 = 255, idexerOutPos2 = 425, idexerOutPos3 = 595;
 
     NormalizedColorSensor colorSensor;
@@ -29,26 +29,9 @@ public class TsunamiIntake {
         UNKNOWN
     }
 
-    public enum IntakeState{
-        INIT,
-        MOVING_TO_POS1,
-        POS1,
-        MOVING_TO_POS2,
-        POS2,
-        MOVING_TO_POS3,
-        POS3,
-        DONE
-    }
-
-    DetectedColor detectedColor;
-
-    IntakeState state;
-
     public void init(HardwareMap hardwareMap){
         colorSensor = hardwareMap.get(NormalizedColorSensor.class, "sensor_color");
         colorSensor.setGain(15);
-
-        state = IntakeState.INIT;
 
         motorIn = hardwareMap.get(DcMotor.class, "motor_intake");
         motorIn.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -74,6 +57,7 @@ public class TsunamiIntake {
         servoRampL.setPosition(0.0);
         servoRampR.setPosition(0.0);
     }
+
 
     // Sensor de cor
     public TsunamiIntake.DetectedColor getDetectedColor(Telemetry telemetry){
@@ -106,55 +90,6 @@ public class TsunamiIntake {
         }
     }
 
-    public void runAutoIntake(){
-        switch(state){
-            case INIT:
-                this.goToInPos1();
-                this.setPowerMotorIn(0.5);
-                state = IntakeState.MOVING_TO_POS1;
-                break;
-            case MOVING_TO_POS1:
-                if (!motorIndexer.isBusy()) {
-                    state = IntakeState.POS1;
-                }
-                break;
-            case POS1:
-                this.setPowerMotorIn(0.5);
-                if(detectedColor == DetectedColor.PURPLE || detectedColor == DetectedColor.GREEN){
-                    this.goToInPos2();
-                    state = IntakeState.MOVING_TO_POS2;
-                }
-                break;
-            case MOVING_TO_POS2:
-                if (!motorIndexer.isBusy()) {
-                    state = IntakeState.POS2;
-                }
-                break;
-            case POS2:
-                this.setPowerMotorIn(0.5);
-                if(detectedColor == DetectedColor.PURPLE || detectedColor == DetectedColor.GREEN){
-                    this.goToInPos3();
-                    state = IntakeState.MOVING_TO_POS3;
-                }
-                break;
-            case MOVING_TO_POS3:
-                if (!motorIndexer.isBusy()) {
-                    state = IntakeState.POS3;
-                }
-                break;
-            case POS3:
-                this.setPowerMotorIn(0.5);
-                if(detectedColor == DetectedColor.PURPLE || detectedColor == DetectedColor.GREEN){
-                    this.setPowerMotorIn(0.2);
-                    state = IntakeState.DONE;
-                }
-                break;
-            case DONE:
-                break;
-            default:
-                break;
-        }
-    }
 
     // Motor do intake para a coleta dos objetos de jogo
     public void setPowerMotorIn(double power) {
@@ -183,7 +118,12 @@ public class TsunamiIntake {
     }
 
     public void setMotorIndexer(){
-        positionIndexer += 170;
+        positionIndexer = motorIndexer.getCurrentPosition() + 170;
+        motorIndexer.setTargetPosition(positionIndexer);
+    }
+
+    public void setMeioMotorIndexer(){
+        positionIndexer = motorIndexer.getCurrentPosition() + 85;
         motorIndexer.setTargetPosition(positionIndexer);
     }
 
