@@ -19,7 +19,7 @@ public class TsunamiIntake {
 
     public int slot = 0;
     private static final int idexerInPos1 = 0, idexerInPos2 = 170, idexerInPos3 = 350;
-    private static final int idexerOutPos1 = 255, idexerOutPos2 = 425, idexerOutPos3 = 595;
+    private static final int idexerOutPos1 = 255, idexerOutPos2 = 435, idexerOutPos3 = 610;
 
     NormalizedColorSensor colorSensor;
 
