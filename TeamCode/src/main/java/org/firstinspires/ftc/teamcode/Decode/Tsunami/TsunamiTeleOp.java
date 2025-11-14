@@ -1,8 +1,13 @@
 package org.firstinspires.ftc.teamcode.Decode.Tsunami;
 
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
+
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 @TeleOp
 public class TsunamiTeleOp extends OpMode {
@@ -15,6 +20,8 @@ public class TsunamiTeleOp extends OpMode {
     TsunamiOuttake outtake = new TsunamiOuttake();
 
     TsunamiIntake.DetectedColor detectedColor;
+
+    private Limelight3A limelight;
 
     double forward, strafe, turn, motorIntake, motorOuttake, robotAngle;
     boolean imuReset, autoIndexer, turnIndexer, turnMeioIndexer;
@@ -72,6 +79,9 @@ public class TsunamiTeleOp extends OpMode {
         intake.init(hardwareMap);
         outtake.init(hardwareMap);
 
+        limelight = hardwareMap.get(Limelight3A.class, "limelight");
+        limelight.pipelineSwitch(9); // April tag #24 pipeline (cesta vermelha)
+
         timer.reset();
 
         // Garante que o indexador comece na posição inicial
@@ -80,7 +90,7 @@ public class TsunamiTeleOp extends OpMode {
 
     @Override
     public void start() {
-        outtake.startLimelight();
+        limelight.start();
     }
 
     @Override
@@ -205,7 +215,7 @@ public class TsunamiTeleOp extends OpMode {
             case DROP_ARTIFACT_1_WAIT_1:
                 // Espera 250ms
                 if (outtakeTimer.milliseconds() >= 500) {
-                    intake.setServoPos(0.40); // Sobe o servo
+                    intake.setServoPos(0.3); // Sobe o servo
                     outtakeTimer.reset();
                     currentOuttakeState = OuttakeState.DROP_ARTIFACT_1_SERVO_OPEN;
                 }
@@ -253,7 +263,7 @@ public class TsunamiTeleOp extends OpMode {
             case DROP_ARTIFACT_2_WAIT_1:
                 // Espera 500ms (sleep(500) - do seu código original)
                 if (outtakeTimer.milliseconds() >= 500) {
-                    intake.setServoPos(0.40); // Abre o servo
+                    intake.setServoPos(0.3); // Abre o servo
                     outtakeTimer.reset();
                     currentOuttakeState = OuttakeState.DROP_ARTIFACT_2_SERVO_OPEN;
                 }
@@ -301,7 +311,7 @@ public class TsunamiTeleOp extends OpMode {
             case DROP_ARTIFACT_3_WAIT_1:
                 // Espera 250ms (sleep(250))
                 if (outtakeTimer.milliseconds() >= 500) {
-                    intake.setServoPos(0.40); // Abre o servo
+                    intake.setServoPos(0.3); // Abre o servo
                     outtakeTimer.reset();
                     currentOuttakeState = OuttakeState.DROP_ARTIFACT_3_SERVO_OPEN;
                 }
@@ -355,7 +365,7 @@ public class TsunamiTeleOp extends OpMode {
         if(gamepad2.dpad_down) {
             intake.setServoPos(0.0);
         }else if(gamepad2.dpad_up){
-            intake.setServoPos(0.40);
+            intake.setServoPos(0.3);
         }
 
         if(turnIndexer) {
@@ -405,6 +415,17 @@ public class TsunamiTeleOp extends OpMode {
         telemetry.addData("Status", "Run Time: " + timer.toString());
         telemetry.update();
 
-        outtake.runLimelight(telemetry);
+        YawPitchRollAngles orientation = drive.imu.getRobotYawPitchRollAngles();
+        limelight.updateRobotOrientation(orientation.getYaw());
+        LLResult llResult = limelight.getLatestResult();
+        if(llResult != null && llResult.isValid()){
+            Pose3D botPose = llResult.getBotpose_MT2();
+            telemetry.addData("Target X", llResult.getTx());
+            telemetry.addData("Target Y", llResult.getTy());
+            telemetry.addData("Target Area", llResult.getTa());
+            telemetry.addLine();
+            telemetry.addData("BotPose", botPose.toString());
+            telemetry.addData("Yaw", botPose.getOrientation().getYaw());
+        }
     }
 }

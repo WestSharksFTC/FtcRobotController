@@ -1,6 +1,8 @@
 package org.firstinspires.ftc.teamcode.Decode.Tsunami;
 
 import com.qualcomm.hardware.gobilda.GoBildaPinpointDriver;
+import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -10,6 +12,8 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
+import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
+import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 public class TsunamiChassis {
     // Motores
@@ -20,6 +24,7 @@ public class TsunamiChassis {
 
     // Pinpoint
     private GoBildaPinpointDriver pinpoint;
+
 
     // Constantes de Controle (Ganhos P)
     private static final double KP_TRANSLATION = 0.02; // Ganho Proporcional para Translação (X e Y)
@@ -75,6 +80,7 @@ public class TsunamiChassis {
 
         pinpoint.setPosition(new Pose2D(DistanceUnit.CM, 0, 0, AngleUnit.DEGREES, 0));
     }
+
 
     public void update(){
         pinpoint.update();
