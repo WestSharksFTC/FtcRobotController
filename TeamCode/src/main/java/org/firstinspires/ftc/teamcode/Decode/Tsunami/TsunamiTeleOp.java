@@ -79,6 +79,11 @@ public class TsunamiTeleOp extends OpMode {
     }
 
     @Override
+    public void start() {
+        outtake.startLimelight();
+    }
+
+    @Override
     public void loop() {
         // Gamepad 1 - CHASSIS
         // controles
@@ -399,5 +404,7 @@ public class TsunamiTeleOp extends OpMode {
         // Show the elapsed game time and wheel power.
         telemetry.addData("Status", "Run Time: " + timer.toString());
         telemetry.update();
+
+        outtake.runLimelight(telemetry);
     }
 }

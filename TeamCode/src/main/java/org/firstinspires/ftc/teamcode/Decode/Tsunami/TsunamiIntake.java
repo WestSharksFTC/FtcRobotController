@@ -34,11 +34,11 @@ public class TsunamiIntake {
         colorSensor.setGain(15);
 
         motorIn = hardwareMap.get(DcMotor.class, "motor_intake");
-        motorIn.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
+        motorIn.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         motorIn.setDirection(DcMotor.Direction.REVERSE);
 
         motorIndexer = hardwareMap.get(DcMotor.class, "motor_indexer");
-        motorIndexer.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        //motorIndexer.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         motorIndexer.setPower(0.0);
         motorIndexer.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         motorIndexer.setTargetPosition(0);
