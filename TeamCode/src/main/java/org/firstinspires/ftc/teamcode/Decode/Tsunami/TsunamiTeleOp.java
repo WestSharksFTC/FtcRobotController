@@ -183,7 +183,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case WAITING_FOR_ARTIFACT_3:
                 if (detectedColor == TsunamiIntake.DetectedColor.PURPLE || detectedColor == TsunamiIntake.DetectedColor.GREEN) {
-                    // O intake está cheio, para o motor e muda o estado
+                    // O intake está cheio, para o motor e muda de estado
                     intake.setPowerMotorIn(0.0);
                     currentIntakeState = IntakeState.FULL;
                 }
@@ -411,10 +411,11 @@ public class TsunamiTeleOp extends OpMode {
         telemetry.addData("Angulo do robô", robotAngle);
         telemetry.addLine();
 
-        // Show the elapsed game time and wheel power.
-        telemetry.addData("Status", "Run Time: " + timer.toString());
-        telemetry.update();
+        telemetry.addLine("DADOS DO SUBSISTEMA DE OUTTAKE");
+        outtake.showOuttakeTelemetry(telemetry);
+        telemetry.addLine();
 
+        telemetry.addLine("DADOS DA LIMELIGHT");
         YawPitchRollAngles orientation = drive.imu.getRobotYawPitchRollAngles();
         limelight.updateRobotOrientation(orientation.getYaw());
         LLResult llResult = limelight.getLatestResult();
@@ -427,5 +428,12 @@ public class TsunamiTeleOp extends OpMode {
             telemetry.addData("BotPose", botPose.toString());
             telemetry.addData("Yaw", botPose.getOrientation().getYaw());
         }
+        telemetry.addLine();
+
+        telemetry.addLine("TIMER");
+        // Show the elapsed game time and wheel power.
+        telemetry.addData("Status", "Run Time: " + timer.toString());
+        telemetry.addLine();
+
     }
 }
