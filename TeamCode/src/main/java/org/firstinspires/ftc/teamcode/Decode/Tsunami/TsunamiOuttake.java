@@ -18,7 +18,7 @@ public class TsunamiOuttake {
     private static final double P = 0.0; // Kp
     private static final double I = 0.0;  // Ki
     private static final double D = 0.0;  // Kd
-    private static final double F = 0.0;  // Kf (Feedforward)
+    private static final double F = 18.0;  // Kf (Feedforward)
 
     // --- 2. VARIÁVEIS DE HARDWARE E CONTROLE ---
     private DcMotorEx outtakeL;
@@ -39,9 +39,9 @@ public class TsunamiOuttake {
 
         outtakeL.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        //PIDFCoefficients velocityPIDF = new PIDFCoefficients(P, I, D, F);
-        //outtakeL.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER, velocityPIDF);
-        //outtakeR.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER, velocityPIDF);
+        PIDFCoefficients velocityPIDF = new PIDFCoefficients(P, I, D, F);
+        outtakeL.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER, velocityPIDF);
+        outtakeR.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER, velocityPIDF);
 
 
         servoOuttake = hardwareMap.get(Servo.class, "servo_outtake");
@@ -62,18 +62,18 @@ public class TsunamiOuttake {
 
     // Verifica se a Flywheel atingiu a velocidade alvo (dentro de uma tolerância).
     public boolean isAtTargetVelocity(double toleranceRPM) {
-        double currentRPM = outtakeL.getVelocity() / RPM_TO_TICKS_PER_SEC;
+        double currentRPM = ((Math.abs(outtakeL.getVelocity()) + Math.abs(outtakeR.getVelocity())) / 2.0) / RPM_TO_TICKS_PER_SEC;
         return Math.abs(targetRPM - currentRPM) <= toleranceRPM;
     }
 
     public void showOuttakeTelemetry(Telemetry telemetry){
-        double currentRPM = outtakeL.getVelocity() / RPM_TO_TICKS_PER_SEC;
+        double currentRPM = Math.abs(outtakeL.getVelocity()) / RPM_TO_TICKS_PER_SEC;
 
         telemetry.addData("Flywheel Target (RPM)", targetRPM);
         telemetry.addData("Flywheel Atual (RPM)", currentRPM);
         telemetry.addData("Flywheel Potência Aplicada ao motor Esquerdo", outtakeL.getPower());
         telemetry.addData("Flywheel Potência Aplicada ao motor Direita", outtakeR.getPower());
-        telemetry.addData("Flywheel Erro (Ticks/s)", targetVelocityTicks - outtakeL.getVelocity());
+        telemetry.addData("Flywheel Erro (Ticks/s)", targetVelocityTicks - Math.abs(outtakeL.getVelocity()));
     }
 
 
