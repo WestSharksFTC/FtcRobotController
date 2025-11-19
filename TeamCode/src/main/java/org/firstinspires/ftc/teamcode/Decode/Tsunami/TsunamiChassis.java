@@ -73,7 +73,7 @@ public class TsunamiChassis {
 
         pinpoint.setEncoderDirections(
                 GoBildaPinpointDriver.EncoderDirection.FORWARD,
-                GoBildaPinpointDriver.EncoderDirection.FORWARD
+                GoBildaPinpointDriver.EncoderDirection.REVERSED
         );
 
         pinpoint.resetPosAndIMU();
@@ -148,81 +148,26 @@ public class TsunamiChassis {
         this.drive(newForward, newStrafe, rotate);
     }
 
-    public void goToPosition(double targetX, double targetY, double targetHeading, boolean opModeIsActive) {
+    public boolean goToPoint(double xTarget, double yTarget, double headingTarget) {
+        double currentX = this.getOdometryX();
+        double currentY = this.getOdometryY();
+        double currentHeading = Math.toRadians(this.getOdometryAngle());
 
-        // Loop de controle
-        while (opModeIsActive) {
-            // 1. Atualiza a posição atual
-            this.update();
-            Pose2D currentPose = pinpoint.getPosition();
+        double xError = xTarget - currentX;
+        double yError = yTarget - currentY;
+        double hError = headingTarget - currentHeading;
 
-            double currentX = currentPose.getX(DistanceUnit.CM);
-            double currentY = currentPose.getY(DistanceUnit.CM);
-            double currentHeading = currentPose.getHeading(AngleUnit.DEGREES);
+        double kP = 0.03;
 
-            // 2. Cálculo do Erro de Translação
-            double errorX = targetX - currentX;
-            double errorY = targetY - currentY;
+        double xPower = xError * kP;
+        double yPower = yError * kP;
+        double turnPower = hError * 0.015;
 
-            // Distância até o alvo
-            double distance = Math.hypot(errorX, errorY);
+        this.drive(xPower, yPower, turnPower);
 
-            // Verifica se chegamos ao destino (Tolerância de Translação)
-            if (distance < TRANSLATION_TOLERANCE_CM) {
-                // Se a translação estiver completa, verificamos a rotação
-                double errorHeading = AngleUnit.normalizeDegrees(targetHeading - currentHeading);
+        double dist = Math.hypot(xError, yError);
 
-                if (Math.abs(errorHeading) < HEADING_TOLERANCE_DEG) {
-                    // Parar o robô e sair do loop
-                    drive(0, 0, 0);
-                    break;
-                }
-
-                // Se a translação estiver completa, mas a rotação não, focamos apenas na rotação
-                double rotatePower = KP_ROTATION * errorHeading;
-                rotatePower = Math.max(-1, Math.min(1, rotatePower));
-                drive(0, 0, rotatePower);
-                continue; // Pula para a próxima iteração para continuar a rotação
-            }
-
-            // 3. Cálculo do Ângulo de Movimento (Field-Relative)
-            // Este é o ângulo que o robô deve apontar para o alvo (em relação ao campo)
-            double angleToTarget = Math.atan2(errorY, errorX); // Em radianos
-
-            // 4. Conversão do Ângulo de Movimento para o Sistema do Robô
-            // O robô precisa se mover na direção do alvo, mas o cálculo de potência
-            // deve ser feito no sistema do robô (forward/strafe).
-            double movementAngle = AngleUnit.normalizeRadians(angleToTarget - Math.toRadians(currentHeading));
-
-            // 5. Cálculo da Potência de Translação (P-Controller)
-            // A potência é proporcional à distância restante
-            double drivePower = distance * KP_TRANSLATION;
-
-            // Limita a potência máxima (ex: 0.8)
-            drivePower = Math.min(drivePower, 0.5);
-
-            // 6. Projeção da Potência no Sistema do Robô
-            double forwardPower = drivePower * Math.sin(movementAngle);
-            double strafePower = drivePower * Math.cos(movementAngle);
-
-            // 7. Cálculo da Potência de Rotação (P-Controller)
-            // O robô tenta manter o ângulo final desejado (targetHeading) enquanto se move.
-            double errorHeadingRad = AngleUnit.normalizeRadians(Math.toRadians(targetHeading) - Math.toRadians(currentHeading));
-            double rotatePower = KP_ROTATION * errorHeadingRad;
-
-            // 8. Limitar e Aplicar Potências
-            forwardPower = Math.max(-1, Math.min(1, forwardPower));
-            strafePower = Math.max(-1, Math.min(1, strafePower));
-            rotatePower = Math.max(-1, Math.min(1, rotatePower));
-
-            this.drive(forwardPower, strafePower, rotatePower);
-        }
-
-        // Parar o robô após sair do loop
-        drive(0, 0, 0);
+        return dist < 1.0 && Math.abs(hError) < Math.toRadians(5);
     }
 
-    public Pose2D getPose() {
-        return pinpoint.getPosition();
-    }
 }

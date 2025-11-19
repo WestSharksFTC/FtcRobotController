@@ -15,15 +15,17 @@ public class TsunamiOuttake {
 
     // Constantes PIDF (Exemplo - DEVE SER CALIBRADO)
     // Estes valores serão carregados no Control Hub
-    private static final double P = 0.0; // Kp
+    private static final double P = 25.0; // Kp
     private static final double I = 0.0;  // Ki
     private static final double D = 0.0;  // Kd
-    private static final double F = 18.0;  // Kf (Feedforward)
+    private static final double F = 17.2;  // Kf (Feedforward)
 
     // --- 2. VARIÁVEIS DE HARDWARE E CONTROLE ---
     private DcMotorEx outtakeL;
     private DcMotorEx outtakeR;
     private Servo servoOuttake;
+    private Servo servoTurretL;
+    private Servo servoTurretR;
 
     private double targetRPM = 0.0;
     public double targetVelocityTicks = 0.0; // Velocidade alvo em ticks/segundo
@@ -45,8 +47,30 @@ public class TsunamiOuttake {
 
 
         servoOuttake = hardwareMap.get(Servo.class, "servo_outtake");
-        servoOuttake.scaleRange(0.0, 0.2);
+        servoOuttake.scaleRange(0.0, 0.15);
         servoOuttake.setPosition(0.0);
+
+        servoTurretL = hardwareMap.get(Servo.class, "servo_turret_left");
+        servoTurretR = hardwareMap.get(Servo.class, "servo_turret_right");
+        servoTurretL.setDirection(Servo.Direction.REVERSE);
+        servoTurretR.setDirection(Servo.Direction.REVERSE);
+        servoTurretL.scaleRange(0.35, 0.63);
+        servoTurretR.scaleRange(0.35, 0.63);
+        servoTurretL.setPosition(0.5);
+        servoTurretR.setPosition(0.5);
+    }
+
+    public double getVoltage(HardwareMap hardwareMap){
+        double voltage = hardwareMap.voltageSensor.iterator().next().getVoltage();
+        return voltage;
+    }
+    public void setTurretAngleX(double angleX){
+        servoTurretL.setPosition(angleX);
+        servoTurretR.setPosition(angleX);
+    }
+
+    public void setTurretAngleY(double angleY){
+        servoOuttake.setPosition(angleY);
     }
 
     // Define a velocidade alvo da Flywheel em RPM.

@@ -115,6 +115,10 @@ public class TsunamiTeleOp extends OpMode {
         turnIndexer = gamepad2.dpadRightWasPressed();
         turnMeioIndexer = gamepad2.dpadLeftWasPressed();
 
+        YawPitchRollAngles orientation = drive.imu.getRobotYawPitchRollAngles();
+        limelight.updateRobotOrientation(orientation.getYaw());
+        LLResult llResult = limelight.getLatestResult();
+
         // Lógica de Detecção de Botão
 
         // Aciona o INTAKE (X)
@@ -214,7 +218,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case DROP_ARTIFACT_1_WAIT_1:
                 // Espera 250ms
-                if (outtakeTimer.milliseconds() >= 500 && outtake.isAtTargetVelocity(50)) {
+                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetVelocity(50)) {
                     intake.setServoPos(0.3); // Sobe o servo
                     outtakeTimer.reset();
                     currentOuttakeState = OuttakeState.DROP_ARTIFACT_1_SERVO_OPEN;
@@ -223,7 +227,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case DROP_ARTIFACT_1_SERVO_OPEN:
                 // Espera 400ms (sleep(400))
-                if (outtakeTimer.milliseconds() >= 500 && outtake.isAtTargetVelocity(50)) {
+                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetVelocity(50)) {
                     intake.setServoPos(0.0); // Fecha o servo
                     outtakeTimer.reset();
                     currentOuttakeState = OuttakeState.DROP_ARTIFACT_1_SERVO_CLOSE;
@@ -232,7 +236,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case DROP_ARTIFACT_1_SERVO_CLOSE:
                 // Espera 250ms (sleep(250))
-                if (outtakeTimer.milliseconds() >= 500 && outtake.isAtTargetVelocity(50)) {
+                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetVelocity(50)) {
                     outtakeTimer.reset();
                     currentOuttakeState = OuttakeState.DROP_ARTIFACT_1_WAIT_3;
                 }
@@ -240,7 +244,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case DROP_ARTIFACT_1_WAIT_3:
                 // Espera 250ms (sleep(250))
-                if (outtakeTimer.milliseconds() >= 500 && outtake.isAtTargetVelocity(50)) {
+                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetVelocity(50)) {
                     currentOuttakeState = OuttakeState.START_SLOT_1;
                 }
                 break;
@@ -262,7 +266,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case DROP_ARTIFACT_2_WAIT_1:
                 // Espera 500ms (sleep(500) - do seu código original)
-                if (outtakeTimer.milliseconds() >= 500 && outtake.isAtTargetVelocity(50)) {
+                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetVelocity(50)) {
                     intake.setServoPos(0.3); // Abre o servo
                     outtakeTimer.reset();
                     currentOuttakeState = OuttakeState.DROP_ARTIFACT_2_SERVO_OPEN;
@@ -271,7 +275,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case DROP_ARTIFACT_2_SERVO_OPEN:
                 // Espera 400ms (sleep(400))
-                if (outtakeTimer.milliseconds() >= 500 && outtake.isAtTargetVelocity(50)) {
+                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetVelocity(50)) {
                     intake.setServoPos(0.0); // Fecha o servo
                     outtakeTimer.reset();
                     currentOuttakeState = OuttakeState.DROP_ARTIFACT_2_SERVO_CLOSE;
@@ -280,7 +284,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case DROP_ARTIFACT_2_SERVO_CLOSE:
                 // Espera 250ms (sleep(250))
-                if (outtakeTimer.milliseconds() >= 500 && outtake.isAtTargetVelocity(50)) {
+                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetVelocity(50)) {
                     outtakeTimer.reset();
                     currentOuttakeState = OuttakeState.DROP_ARTIFACT_2_WAIT_3;
                 }
@@ -288,7 +292,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case DROP_ARTIFACT_2_WAIT_3:
                 // Espera 250ms (sleep(250))
-                if (outtakeTimer.milliseconds() >= 500 && outtake.isAtTargetVelocity(50)) {
+                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetVelocity(50)) {
                     currentOuttakeState = OuttakeState.START_SLOT_2;
                 }
                 break;
@@ -310,7 +314,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case DROP_ARTIFACT_3_WAIT_1:
                 // Espera 250ms (sleep(250))
-                if (outtakeTimer.milliseconds() >= 500 && outtake.isAtTargetVelocity(50)) {
+                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetVelocity(50)) {
                     intake.setServoPos(0.3); // Abre o servo
                     outtakeTimer.reset();
                     currentOuttakeState = OuttakeState.DROP_ARTIFACT_3_SERVO_OPEN;
@@ -319,7 +323,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case DROP_ARTIFACT_3_SERVO_OPEN:
                 // Espera 400ms (sleep(400))
-                if (outtakeTimer.milliseconds() >= 500 && outtake.isAtTargetVelocity(50)) {
+                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetVelocity(50)) {
                     intake.setServoPos(0.0); // Fecha o servo
                     outtakeTimer.reset();
                     currentOuttakeState = OuttakeState.DROP_ARTIFACT_3_SERVO_CLOSE;
@@ -328,7 +332,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case DROP_ARTIFACT_3_SERVO_CLOSE:
                 // Espera 250ms (sleep(250))
-                if (outtakeTimer.milliseconds() >= 500 && outtake.isAtTargetVelocity(50)) {
+                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetVelocity(50)) {
                     outtakeTimer.reset();
                     currentOuttakeState = OuttakeState.GO_TO_HOME;
                 }
@@ -336,7 +340,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case GO_TO_HOME:
                 // Espera 250ms (sleep(250))
-                if (outtakeTimer.milliseconds() >= 500 && outtake.isAtTargetVelocity(50)) {
+                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetVelocity(50)) {
                     intake.goToInPos1(); // Volta para a posição inicial
                     outtakeTimer.reset();
                     currentOuttakeState = OuttakeState.WAIT_FOR_HOME;
@@ -345,7 +349,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case WAIT_FOR_HOME:
                 // Espera 1000ms (sleep(1000))
-                if (outtakeTimer.milliseconds() >= 500 && outtake.isAtTargetVelocity(50)) {
+                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetVelocity(50)) {
                     currentOuttakeState = OuttakeState.FINISHED;
                 }
                 break;
@@ -376,6 +380,17 @@ public class TsunamiTeleOp extends OpMode {
         if(turnMeioIndexer){
             intake.setMeioMotorIndexer();
         }
+
+        if(gamepad1.y){
+            outtake.setTurretAngleY(1.0);
+        }else if(gamepad1.a){
+            outtake.setTurretAngleY(0.0);
+        }
+
+
+        double servoPos = (llResult.getTx() + 25.0) / 50.0;
+        outtake.setTurretAngleX(servoPos);
+
 
 
         // Telemetrias
@@ -417,9 +432,6 @@ public class TsunamiTeleOp extends OpMode {
         telemetry.addLine();
 
         telemetry.addLine("DADOS DA LIMELIGHT");
-        YawPitchRollAngles orientation = drive.imu.getRobotYawPitchRollAngles();
-        limelight.updateRobotOrientation(orientation.getYaw());
-        LLResult llResult = limelight.getLatestResult();
         if(llResult != null && llResult.isValid()){
             Pose3D botPose = llResult.getBotpose_MT2();
             telemetry.addData("Target X", llResult.getTx());
@@ -436,5 +448,7 @@ public class TsunamiTeleOp extends OpMode {
         telemetry.addData("Status", "Run Time: " + timer.toString());
         telemetry.addLine();
 
+
+        telemetry.addData("Voltagem", outtake.getVoltage(hardwareMap));
     }
 }
