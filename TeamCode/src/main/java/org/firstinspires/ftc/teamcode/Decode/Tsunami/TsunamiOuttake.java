@@ -10,6 +10,9 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 public class TsunamiOuttake {
     // --- 1. CONSTANTES DE CALIBRAÇÃO ---
+    private double K = 1.8;           // graus por angulo real-limelight (45 / 25)
+    private double SERVO_MIN = 0.0;
+    private double SERVO_MAX = 1.0;
     private static final double TICKS_PER_REV = 28;
     private static final double RPM_TO_TICKS_PER_SEC = TICKS_PER_REV / 60.0;
 
@@ -63,6 +66,24 @@ public class TsunamiOuttake {
     public double getVoltage(HardwareMap hardwareMap){
         double voltage = hardwareMap.voltageSensor.iterator().next().getVoltage();
         return voltage;
+    }
+
+    public double clamp(double v, double a, double b) {
+        return Math.max(a, Math.min(b, v));
+    }
+
+    public double limelightXToServoPos(double limelightX) {
+        // calcula ângulo desejado da torreta (graus)
+        double turretDeg = K * limelightX;
+        // converte grau -> posição servo (0->-45°, 0.5->0°, 1->+45°)
+        double servoPos = (turretDeg + 45.0) / 90.0;
+        // clamp e retorna
+        return clamp(servoPos, SERVO_MIN, SERVO_MAX);
+    }
+
+    public double getServoTurretXCurrentPosition(){
+        double servoPos = (servoTurretL.getPosition() + servoTurretR.getPosition()) / 2.0;
+        return servoPos;
     }
     public void setTurretAngleX(double angleX){
         servoTurretL.setPosition(angleX);

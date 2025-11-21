@@ -387,9 +387,18 @@ public class TsunamiTeleOp extends OpMode {
             outtake.setTurretAngleY(0.0);
         }
 
+        if(llResult != null && llResult.isValid()){
+            double pos = outtake.limelightXToServoPos(llResult.getTx());
 
-        double servoPos = (llResult.getTx() + 25.0) / 50.0;
-        outtake.setTurretAngleX(servoPos);
+            // Smooth (opcional): aplica slew-rate para evitar movimentos bruscos
+            double maxDeltaPerLoop = 0.02; // ajusta conforme loop rate
+            double currentPos = outtake.getServoTurretXCurrentPosition();
+            double errorPos = pos - currentPos;
+            double delta = outtake.clamp(errorPos, -maxDeltaPerLoop, maxDeltaPerLoop);
+            double newPos = outtake.clamp(currentPos + delta, 0.0, 1.0);
+
+            outtake.setTurretAngleX(newPos);
+        }
 
 
 
