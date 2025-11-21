@@ -3,25 +3,16 @@ package org.firstinspires.ftc.teamcode.Decode.Tsunami;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.PIDFCoefficients;
 import com.qualcomm.robotcore.hardware.Servo;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 public class TsunamiOuttake {
-    // --- 1. CONSTANTES DE CALIBRAÇÃO ---
-    private double K = 1.8;           // graus por angulo real-limelight (45 / 25)
-    private double SERVO_MIN = 0.0;
-    private double SERVO_MAX = 1.0;
-    private static final double TICKS_PER_REV = 28;
-    private static final double RPM_TO_TICKS_PER_SEC = TICKS_PER_REV / 60.0;
 
-    // Constantes PIDF (Exemplo - DEVE SER CALIBRADO)
-    // Estes valores serão carregados no Control Hub
-    private static final double P = 25.0; // Kp
-    private static final double I = 0.0;  // Ki
-    private static final double D = 0.0;  // Kd
-    private static final double F = 17.2;  // Kf (Feedforward)
+    // CORREÇÃO: Constantes de conversão de RPM
+    private static final double TICKS_PER_REV = 28;  // Para motores REV HD Hex
+    // Para converter RPM para ticks/segundo: RPM * TICKS_PER_REV / 60
+    private static final double RPM_TO_TICKS_PER_SEC = TICKS_PER_REV / 60.0;  // = 0.4667
 
     // --- 2. VARIÁVEIS DE HARDWARE E CONTROLE ---
     private DcMotorEx outtakeL;
@@ -31,8 +22,11 @@ public class TsunamiOuttake {
     private Servo servoTurretR;
 
     private double targetRPM = 0.0;
-    public double targetVelocityTicks = 0.0; // Velocidade alvo em ticks/segundo
 
+    // Variáveis para controle PID
+    private double lastError = 0.0;
+    private double integralSum = 0.0;
+    private long lastUpdateTime = 0;
 
 
     public void init(HardwareMap hardwareMap){
@@ -43,11 +37,6 @@ public class TsunamiOuttake {
         outtakeR.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
 
         outtakeL.setDirection(DcMotorSimple.Direction.REVERSE);
-
-        PIDFCoefficients velocityPIDF = new PIDFCoefficients(P, I, D, F);
-        outtakeL.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER, velocityPIDF);
-        outtakeR.setPIDFCoefficients(DcMotorEx.RunMode.RUN_USING_ENCODER, velocityPIDF);
-
 
         servoOuttake = hardwareMap.get(Servo.class, "servo_outtake");
         servoOuttake.scaleRange(0.0, 0.15);
@@ -61,6 +50,8 @@ public class TsunamiOuttake {
         servoTurretR.scaleRange(0.35, 0.63);
         servoTurretL.setPosition(0.5);
         servoTurretR.setPosition(0.5);
+
+        lastUpdateTime = System.nanoTime();
     }
 
     public double getVoltage(HardwareMap hardwareMap){
@@ -72,19 +63,11 @@ public class TsunamiOuttake {
         return Math.max(a, Math.min(b, v));
     }
 
-    public double limelightXToServoPos(double limelightX) {
-        // calcula ângulo desejado da torreta (graus)
-        double turretDeg = K * limelightX;
-        // converte grau -> posição servo (0->-45°, 0.5->0°, 1->+45°)
-        double servoPos = (turretDeg + 45.0) / 90.0;
-        // clamp e retorna
-        return clamp(servoPos, SERVO_MIN, SERVO_MAX);
-    }
-
     public double getServoTurretXCurrentPosition(){
         double servoPos = (servoTurretL.getPosition() + servoTurretR.getPosition()) / 2.0;
         return servoPos;
     }
+
     public void setTurretAngleX(double angleX){
         servoTurretL.setPosition(angleX);
         servoTurretR.setPosition(angleX);
@@ -94,44 +77,99 @@ public class TsunamiOuttake {
         servoOuttake.setPosition(angleY);
     }
 
-    // Define a velocidade alvo da Flywheel em RPM.
-    public void setTargetRPM(double rpm) {
-        this.targetRPM = rpm;
-        // Converte RPM para a unidade de controle (ticks/segundo)
-        this.targetVelocityTicks = rpm * RPM_TO_TICKS_PER_SEC;
+    /**
+     * MÉTODO PRINCIPAL DE CONTROLE - CORRIGIDO
+     * Este método deve ser chamado continuamente no loop()
+     */
+    public void updateShooterControl() {
+        long currentTime = System.nanoTime();
+        double dt = (currentTime - lastUpdateTime) / 1.0e9; // Converter para segundos
+        lastUpdateTime = currentTime;
 
-        // --- PASSO CRÍTICO: DEFINIR A VELOCIDADE ALVO ---
-        outtakeL.setVelocity(targetVelocityTicks);
-        outtakeR.setVelocity(targetVelocityTicks);
+        double currentRPM = getCurrentRPM();
+        double error = targetRPM - currentRPM;
+
+        // Ganhos PID ajustados
+        double kP = 0.003;   // Aumentado significativamente (era 0.0005)
+        double kI = 0.0001;  // Pequeno termo integral
+        double kD = 0.0002;  // Pequeno termo derivativo
+
+        // Termo Feedforward - essencial para flywheels!
+        // F = targetRPM / maxRPM
+        double maxRPM = 6000.0;  // Ajuste conforme seu motor
+        double kF = 1.0 / maxRPM;
+        double feedforward = targetRPM * kF;
+
+        // Cálculo PID
+        integralSum += error * dt;
+
+        // Anti-windup: limita o integral
+        integralSum = clamp(integralSum, -100, 100);
+
+        double derivative = (error - lastError) / dt;
+        lastError = error;
+
+        double pidOutput = kP * error + kI * integralSum + kD * derivative;
+
+        // Potência total = Feedforward + PID
+        double power = feedforward + pidOutput;
+
+        // IMPORTANTE: Não limitar apenas entre 0 e 1!
+        // Se o RPM está alto demais, precisamos frear (potência menor)
+        power = clamp(power, -0.1, 1.0);  // Permite pequena frenagem
+
+        setShooterPower(power);
     }
 
-    // Verifica se a Flywheel atingiu a velocidade alvo (dentro de uma tolerância).
-    public boolean isAtTargetVelocity(double toleranceRPM) {
-        double currentRPM = ((Math.abs(outtakeL.getVelocity()) + Math.abs(outtakeR.getVelocity())) / 2.0) / RPM_TO_TICKS_PER_SEC;
-        return Math.abs(targetRPM - currentRPM) <= toleranceRPM;
+    /**
+     * Calcula o RPM atual dos motores
+     * CORREÇÃO: Conversão correta de velocity (ticks/seg) para RPM
+     */
+    public double getCurrentRPM() {
+        // getVelocity() retorna ticks por segundo
+        double avgVelocityTicksPerSec = (outtakeL.getVelocity() + outtakeR.getVelocity()) / 2.0;
+
+        // Converter ticks/segundo para RPM
+        // RPM = (ticks/sec) * (60 sec/min) / (ticks/rev)
+        double rpm = Math.abs(avgVelocityTicksPerSec * 60.0 / TICKS_PER_REV);
+
+        return rpm;
+    }
+
+    public void setTargetRPM(double rpm){
+        targetRPM = rpm;
+        // Reset do controle quando muda target
+        integralSum = 0;
+        lastError = 0;
+    }
+
+    public boolean isAtTargetRPM(double tolerance) {
+        double currentRPM = getCurrentRPM();
+        return Math.abs(currentRPM - targetRPM) <= tolerance;
+    }
+
+    public void setShooterPower(double power) {
+        outtakeL.setPower(power);
+        outtakeR.setPower(power);
     }
 
     public void showOuttakeTelemetry(Telemetry telemetry){
-        double currentRPM = Math.abs(outtakeL.getVelocity()) / RPM_TO_TICKS_PER_SEC;
+        double currentRPM = getCurrentRPM();
+        double error = targetRPM - currentRPM;
+        double currentPower = (outtakeL.getPower() + outtakeR.getPower()) / 2.0;
 
-        telemetry.addData("Flywheel Target (RPM)", targetRPM);
-        telemetry.addData("Flywheel Atual (RPM)", currentRPM);
-        telemetry.addData("Flywheel Potência Aplicada ao motor Esquerdo", outtakeL.getPower());
-        telemetry.addData("Flywheel Potência Aplicada ao motor Direita", outtakeR.getPower());
-        telemetry.addData("Flywheel Erro (Ticks/s)", targetVelocityTicks - Math.abs(outtakeL.getVelocity()));
+        telemetry.addData("Flywheel Atual (RPM)", "%.1f", currentRPM);
+        telemetry.addData("Flywheel Objetivo (RPM)", "%.1f", targetRPM);
+        telemetry.addData("Flywheel Potência Motor Esquerdo", "%.3f", outtakeL.getPower());
+        telemetry.addData("Flywheel Potência Motor Direito", "%.3f", outtakeR.getPower());
+        telemetry.addData("Flywheel Erro (RPM)", "%.1f", error);
+        telemetry.addData("Flywheel Velocidade L (ticks/s)", "%.1f", outtakeL.getVelocity());
+        telemetry.addData("Flywheel Velocidade R (ticks/s)", "%.1f", outtakeR.getVelocity());
     }
-
 
     // Setar a velocidade do outtake manualmente
     public void setOuttakePower(double power){
         outtakeL.setPower(power);
         outtakeR.setPower(power);
-    }
-
-    // Para o motor da Flywheel
-    public void stop() {
-        setTargetRPM(0.0);
-        outtakeL.setPower(0.0);
-        outtakeR.setPower(0.0);
     }
 }

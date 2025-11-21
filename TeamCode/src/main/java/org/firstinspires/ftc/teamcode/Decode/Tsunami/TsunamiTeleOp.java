@@ -115,9 +115,23 @@ public class TsunamiTeleOp extends OpMode {
         turnIndexer = gamepad2.dpadRightWasPressed();
         turnMeioIndexer = gamepad2.dpadLeftWasPressed();
 
-        YawPitchRollAngles orientation = drive.imu.getRobotYawPitchRollAngles();
-        limelight.updateRobotOrientation(orientation.getYaw());
         LLResult llResult = limelight.getLatestResult();
+        double tx = llResult.getTx();
+        double ty = llResult.getTy();
+
+        // limites medidos no robô para o ajuste de angulo vertical do shooter
+        double tyMin = -2.8;   // mais longe
+        double tyMax = 16.5;   // mais perto
+        // interpolação linear invertida
+        double normalized = (ty - tyMin) / (tyMax - tyMin);
+        double servoOutPos = 1.0 - normalized;   // invertido porque 0=baixo e 1=alto
+
+        // rpm desejado para cada extremo
+        double rpmNear = 2100;   // perto (tyMax)
+        double rpmFar  = 3300;   // longe (tyMin)
+
+        // interpolation: tyMax → rpmNear   |   tyMin → rpmFar
+        double targetRPM = rpmFar - normalized * (rpmFar - rpmNear);
 
         // Lógica de Detecção de Botão
 
@@ -135,7 +149,7 @@ public class TsunamiTeleOp extends OpMode {
         // Aciona o OUTTAKE (B)
         if (gamepad2.b && !botao_b_pressed && currentOuttakeState == OuttakeState.INACTIVE) {
             currentOuttakeState = OuttakeState.START;
-            outtake.setTargetRPM(3500); // Liga o motor do Outtake
+            outtake.setTargetRPM(targetRPM); // Liga o motor do Outtake
         }
         botao_b_pressed = gamepad2.b; // Atualiza o estado do botão
 
@@ -152,6 +166,8 @@ public class TsunamiTeleOp extends OpMode {
         // O motor do Outtake é ligado no início da máquina de estados do Outtake
         if (currentOuttakeState == OuttakeState.INACTIVE) {
             outtake.setOuttakePower(motorOuttake); // Permite controle manual se o automático estiver inativo
+        }else{
+            outtake.updateShooterControl();
         }
 
 
@@ -210,7 +226,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case WAIT_FOR_POS_1:
                 // Espera o motor chegar E o tempo de 2000ms
-                if (!intake.motorIndexer.isBusy() && outtake.isAtTargetVelocity(50)) {
+                if (!intake.motorIndexer.isBusy() && outtake.isAtTargetRPM(50)) {
                     outtakeTimer.reset();
                     currentOuttakeState = OuttakeState.DROP_ARTIFACT_1_WAIT_1;
                 }
@@ -218,7 +234,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case DROP_ARTIFACT_1_WAIT_1:
                 // Espera 250ms
-                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetVelocity(50)) {
+                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetRPM(50)) {
                     intake.setServoPos(0.3); // Sobe o servo
                     outtakeTimer.reset();
                     currentOuttakeState = OuttakeState.DROP_ARTIFACT_1_SERVO_OPEN;
@@ -227,7 +243,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case DROP_ARTIFACT_1_SERVO_OPEN:
                 // Espera 400ms (sleep(400))
-                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetVelocity(50)) {
+                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetRPM(50)) {
                     intake.setServoPos(0.0); // Fecha o servo
                     outtakeTimer.reset();
                     currentOuttakeState = OuttakeState.DROP_ARTIFACT_1_SERVO_CLOSE;
@@ -236,7 +252,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case DROP_ARTIFACT_1_SERVO_CLOSE:
                 // Espera 250ms (sleep(250))
-                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetVelocity(50)) {
+                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetRPM(50)) {
                     outtakeTimer.reset();
                     currentOuttakeState = OuttakeState.DROP_ARTIFACT_1_WAIT_3;
                 }
@@ -244,7 +260,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case DROP_ARTIFACT_1_WAIT_3:
                 // Espera 250ms (sleep(250))
-                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetVelocity(50)) {
+                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetRPM(50)) {
                     currentOuttakeState = OuttakeState.START_SLOT_1;
                 }
                 break;
@@ -258,7 +274,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case WAIT_FOR_POS_2:
                 // Espera o motor chegar E o tempo de 500ms
-                if (!intake.motorIndexer.isBusy() && outtake.isAtTargetVelocity(50)) {
+                if (!intake.motorIndexer.isBusy() && outtake.isAtTargetRPM(50)) {
                     outtakeTimer.reset();
                     currentOuttakeState = OuttakeState.DROP_ARTIFACT_2_WAIT_1;
                 }
@@ -266,7 +282,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case DROP_ARTIFACT_2_WAIT_1:
                 // Espera 500ms (sleep(500) - do seu código original)
-                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetVelocity(50)) {
+                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetRPM(50)) {
                     intake.setServoPos(0.3); // Abre o servo
                     outtakeTimer.reset();
                     currentOuttakeState = OuttakeState.DROP_ARTIFACT_2_SERVO_OPEN;
@@ -275,7 +291,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case DROP_ARTIFACT_2_SERVO_OPEN:
                 // Espera 400ms (sleep(400))
-                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetVelocity(50)) {
+                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetRPM(50)) {
                     intake.setServoPos(0.0); // Fecha o servo
                     outtakeTimer.reset();
                     currentOuttakeState = OuttakeState.DROP_ARTIFACT_2_SERVO_CLOSE;
@@ -284,7 +300,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case DROP_ARTIFACT_2_SERVO_CLOSE:
                 // Espera 250ms (sleep(250))
-                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetVelocity(50)) {
+                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetRPM(50)) {
                     outtakeTimer.reset();
                     currentOuttakeState = OuttakeState.DROP_ARTIFACT_2_WAIT_3;
                 }
@@ -292,7 +308,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case DROP_ARTIFACT_2_WAIT_3:
                 // Espera 250ms (sleep(250))
-                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetVelocity(50)) {
+                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetRPM(50)) {
                     currentOuttakeState = OuttakeState.START_SLOT_2;
                 }
                 break;
@@ -306,7 +322,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case WAIT_FOR_POS_3:
                 // Espera o motor chegar E o tempo de 250ms
-                if (!intake.motorIndexer.isBusy() && outtake.isAtTargetVelocity(50)) {
+                if (!intake.motorIndexer.isBusy() && outtake.isAtTargetRPM(50)) {
                     outtakeTimer.reset();
                     currentOuttakeState = OuttakeState.DROP_ARTIFACT_3_WAIT_1;
                 }
@@ -314,7 +330,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case DROP_ARTIFACT_3_WAIT_1:
                 // Espera 250ms (sleep(250))
-                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetVelocity(50)) {
+                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetRPM(50)) {
                     intake.setServoPos(0.3); // Abre o servo
                     outtakeTimer.reset();
                     currentOuttakeState = OuttakeState.DROP_ARTIFACT_3_SERVO_OPEN;
@@ -323,7 +339,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case DROP_ARTIFACT_3_SERVO_OPEN:
                 // Espera 400ms (sleep(400))
-                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetVelocity(50)) {
+                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetRPM(50)) {
                     intake.setServoPos(0.0); // Fecha o servo
                     outtakeTimer.reset();
                     currentOuttakeState = OuttakeState.DROP_ARTIFACT_3_SERVO_CLOSE;
@@ -332,7 +348,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case DROP_ARTIFACT_3_SERVO_CLOSE:
                 // Espera 250ms (sleep(250))
-                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetVelocity(50)) {
+                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetRPM(50)) {
                     outtakeTimer.reset();
                     currentOuttakeState = OuttakeState.GO_TO_HOME;
                 }
@@ -340,7 +356,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case GO_TO_HOME:
                 // Espera 250ms (sleep(250))
-                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetVelocity(50)) {
+                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetRPM(50)) {
                     intake.goToInPos1(); // Volta para a posição inicial
                     outtakeTimer.reset();
                     currentOuttakeState = OuttakeState.WAIT_FOR_HOME;
@@ -349,13 +365,13 @@ public class TsunamiTeleOp extends OpMode {
 
             case WAIT_FOR_HOME:
                 // Espera 1000ms (sleep(1000))
-                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetVelocity(50)) {
+                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetRPM(50)) {
                     currentOuttakeState = OuttakeState.FINISHED;
                 }
                 break;
 
             case FINISHED:
-                outtake.stop();
+                outtake.setTargetRPM(0.0);
                 outtake.setOuttakePower(motorOuttake); // Volta o controle do motor para o gamepad
                 currentOuttakeState = OuttakeState.INACTIVE;
                 break;
@@ -381,24 +397,23 @@ public class TsunamiTeleOp extends OpMode {
             intake.setMeioMotorIndexer();
         }
 
-        if(gamepad1.y){
-            outtake.setTurretAngleY(1.0);
-        }else if(gamepad1.a){
-            outtake.setTurretAngleY(0.0);
-        }
-
         if(llResult != null && llResult.isValid()){
-            double pos = outtake.limelightXToServoPos(llResult.getTx());
+            if (Math.abs(tx) >= 0.5) {
+                double error = tx;
+                double k = 0.001;
 
-            // Smooth (opcional): aplica slew-rate para evitar movimentos bruscos
-            double maxDeltaPerLoop = 0.02; // ajusta conforme loop rate
-            double currentPos = outtake.getServoTurretXCurrentPosition();
-            double errorPos = pos - currentPos;
-            double delta = outtake.clamp(errorPos, -maxDeltaPerLoop, maxDeltaPerLoop);
-            double newPos = outtake.clamp(currentPos + delta, 0.0, 1.0);
+                // Ajuste proporcional direto
+                double delta = error * k * -1;
 
-            outtake.setTurretAngleX(newPos);
+                double newPos = outtake.getServoTurretXCurrentPosition() - delta;
+
+                outtake.setTurretAngleX(outtake.clamp(newPos, 0.0, 1.0));
+            }
         }
+
+        servoOutPos = outtake.clamp(servoOutPos, 0.0, 1.0);
+
+        outtake.setTurretAngleY(servoOutPos);
 
 
 
@@ -417,9 +432,8 @@ public class TsunamiTeleOp extends OpMode {
         telemetry.addLine();
 
         telemetry.addLine("COR DETECTADA PELO SENSOR");
-        telemetry.addData("Color Detected", detectedColor);
-        telemetry.addLine();
         detectedColor = intake.getDetectedColor(telemetry);
+        telemetry.addData("Color Detected", detectedColor);
         telemetry.addLine();
 
         telemetry.addLine("POSIÇÕES DO SERVO DA RAMPA");
@@ -452,12 +466,18 @@ public class TsunamiTeleOp extends OpMode {
         }
         telemetry.addLine();
 
-        telemetry.addLine("TIMER");
-        // Show the elapsed game time and wheel power.
-        telemetry.addData("Status", "Run Time: " + timer.toString());
+        telemetry.addLine("DADOS DA TORRETA");
+        telemetry.addData("Posição X da torreta", outtake.getServoTurretXCurrentPosition());
         telemetry.addLine();
 
 
+        telemetry.addLine("TIMER");
+        telemetry.addData("Status", "Run Time: " + timer.seconds());
+        telemetry.addLine();
+
+        telemetry.addLine("ENERGIA");
         telemetry.addData("Voltagem", outtake.getVoltage(hardwareMap));
+        telemetry.addLine();
+
     }
 }
