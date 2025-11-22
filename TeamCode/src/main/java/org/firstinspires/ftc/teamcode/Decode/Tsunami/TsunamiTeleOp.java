@@ -7,7 +7,6 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
-import org.firstinspires.ftc.robotcore.external.navigation.YawPitchRollAngles;
 
 @TeleOp
 public class TsunamiTeleOp extends OpMode {
@@ -102,9 +101,12 @@ public class TsunamiTeleOp extends OpMode {
         turn = gamepad1.right_stick_x;
         imuReset = gamepad1.left_bumper;
 
-        robotAngle = drive.getRobotAngle();
+        robotAngle = drive.getHeading();
 
-        drive.driveFieldRelative(forward, strafe, turn, imuReset);
+        if(imuReset){
+            drive.imu.resetYaw();
+        }
+        drive.driveFieldRelative(forward, strafe, turn);
 
 
         // Gamepad 2 - SUBSISTEMAS
@@ -234,7 +236,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case DROP_ARTIFACT_1_WAIT_1:
                 // Espera 250ms
-                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetRPM(50)) {
+                if (outtakeTimer.milliseconds() >= 100 && outtake.isAtTargetRPM(50)) {
                     intake.setServoPos(0.3); // Sobe o servo
                     outtakeTimer.reset();
                     currentOuttakeState = OuttakeState.DROP_ARTIFACT_1_SERVO_OPEN;
@@ -252,7 +254,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case DROP_ARTIFACT_1_SERVO_CLOSE:
                 // Espera 250ms (sleep(250))
-                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetRPM(50)) {
+                if (outtakeTimer.milliseconds() >= 100 && outtake.isAtTargetRPM(50)) {
                     outtakeTimer.reset();
                     currentOuttakeState = OuttakeState.DROP_ARTIFACT_1_WAIT_3;
                 }
@@ -260,7 +262,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case DROP_ARTIFACT_1_WAIT_3:
                 // Espera 250ms (sleep(250))
-                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetRPM(50)) {
+                if (outtakeTimer.milliseconds() >= 100 && outtake.isAtTargetRPM(50)) {
                     currentOuttakeState = OuttakeState.START_SLOT_1;
                 }
                 break;
@@ -282,7 +284,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case DROP_ARTIFACT_2_WAIT_1:
                 // Espera 500ms (sleep(500) - do seu código original)
-                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetRPM(50)) {
+                if (outtakeTimer.milliseconds() >= 100 && outtake.isAtTargetRPM(50)) {
                     intake.setServoPos(0.3); // Abre o servo
                     outtakeTimer.reset();
                     currentOuttakeState = OuttakeState.DROP_ARTIFACT_2_SERVO_OPEN;
@@ -300,7 +302,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case DROP_ARTIFACT_2_SERVO_CLOSE:
                 // Espera 250ms (sleep(250))
-                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetRPM(50)) {
+                if (outtakeTimer.milliseconds() >= 100 && outtake.isAtTargetRPM(50)) {
                     outtakeTimer.reset();
                     currentOuttakeState = OuttakeState.DROP_ARTIFACT_2_WAIT_3;
                 }
@@ -308,7 +310,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case DROP_ARTIFACT_2_WAIT_3:
                 // Espera 250ms (sleep(250))
-                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetRPM(50)) {
+                if (outtakeTimer.milliseconds() >= 100 && outtake.isAtTargetRPM(50)) {
                     currentOuttakeState = OuttakeState.START_SLOT_2;
                 }
                 break;
@@ -330,7 +332,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case DROP_ARTIFACT_3_WAIT_1:
                 // Espera 250ms (sleep(250))
-                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetRPM(50)) {
+                if (outtakeTimer.milliseconds() >= 100 && outtake.isAtTargetRPM(50)) {
                     intake.setServoPos(0.3); // Abre o servo
                     outtakeTimer.reset();
                     currentOuttakeState = OuttakeState.DROP_ARTIFACT_3_SERVO_OPEN;
@@ -348,7 +350,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case DROP_ARTIFACT_3_SERVO_CLOSE:
                 // Espera 250ms (sleep(250))
-                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetRPM(50)) {
+                if (outtakeTimer.milliseconds() >= 100 && outtake.isAtTargetRPM(50)) {
                     outtakeTimer.reset();
                     currentOuttakeState = OuttakeState.GO_TO_HOME;
                 }
@@ -356,7 +358,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case GO_TO_HOME:
                 // Espera 250ms (sleep(250))
-                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetRPM(50)) {
+                if (outtakeTimer.milliseconds() >= 100 && outtake.isAtTargetRPM(50)) {
                     intake.goToInPos1(); // Volta para a posição inicial
                     outtakeTimer.reset();
                     currentOuttakeState = OuttakeState.WAIT_FOR_HOME;
@@ -365,7 +367,7 @@ public class TsunamiTeleOp extends OpMode {
 
             case WAIT_FOR_HOME:
                 // Espera 1000ms (sleep(1000))
-                if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetRPM(50)) {
+                if (outtakeTimer.milliseconds() >= 100 && outtake.isAtTargetRPM(50)) {
                     currentOuttakeState = OuttakeState.FINISHED;
                 }
                 break;
@@ -441,9 +443,9 @@ public class TsunamiTeleOp extends OpMode {
         telemetry.addLine();
 
         telemetry.addLine("DADOS DA ODOMETRIA DO ROBÔ");
-        telemetry.addData("Odometria X", drive.getOdometryX());
-        telemetry.addData("Odometria y", drive.getOdometryY());
-        telemetry.addData("Odometria Ângulo", drive.getOdometryAngle());
+        telemetry.addData("Odometria X", drive.getX());
+        telemetry.addData("Odometria y", drive.getY());
+        telemetry.addData("Odometria Ângulo", drive.getHeading());
         telemetry.addLine();
 
         telemetry.addLine("ÂNGULO DO ROBÔ EM RELAÇÃO A ARENA");
@@ -478,6 +480,5 @@ public class TsunamiTeleOp extends OpMode {
         telemetry.addLine("ENERGIA");
         telemetry.addData("Voltagem", outtake.getVoltage(hardwareMap));
         telemetry.addLine();
-
     }
 }
