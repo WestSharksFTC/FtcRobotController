@@ -12,7 +12,7 @@ import org.firstinspires.ftc.robotcore.external.navigation.Pose2D;
 
 public class TsunamiChassis {
     // Motores
-    private DcMotor frontLeftMotor, backLeftMotor, frontRightMotor, backRightMotor;
+    public DcMotor frontLeftMotor, backLeftMotor, frontRightMotor, backRightMotor;
 
     // IMU
     public IMU imu;
@@ -70,6 +70,8 @@ public class TsunamiChassis {
 
         pinpoint.setPosition(new Pose2D(DistanceUnit.CM, 0, 0, AngleUnit.DEGREES, 0));
     }
+
+    //=====  TELEOP  =====
 
     //Atualiza a odometria
     public void update(){
@@ -236,4 +238,42 @@ public class TsunamiChassis {
     public double getImuYaw() {
         return imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
     }
+
+    public void driveTo(double targetX, double targetY, double power) {
+
+        double currentX = getX();
+        double currentY = getY();
+
+        double dx = targetX - currentX;
+        double dy = targetY - currentY;
+
+        double dist = Math.hypot(dx, dy);
+
+        // Direção normalizada
+        double forward = dx / dist;
+        double strafe = dy / dist;
+
+        drive(forward * power, strafe * power, 0);
+    }
+
+    public boolean hasReached(double targetX, double targetY) {
+        double dx = targetX - this.getX();
+        double dy = targetY - this.getY();
+        double dist = Math.hypot(dx, dy);
+
+        return dist < POSITION_TOLERANCE;
+    }
+
+    public void driveForward(double power) {
+        drive(power, 0, 0);
+    }
+
+    public void driveStrafe(double power) {
+        drive(0, power, 0);
+    }
+
+    public void driveTurn(double power) {
+        drive(0, 0, power);
+    }
+
 }

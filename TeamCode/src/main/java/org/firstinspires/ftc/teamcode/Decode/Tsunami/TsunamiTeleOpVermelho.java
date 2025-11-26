@@ -2,16 +2,18 @@ package org.firstinspires.ftc.teamcode.Decode.Tsunami;
 
 import com.qualcomm.hardware.limelightvision.LLResult;
 import com.qualcomm.hardware.limelightvision.Limelight3A;
-import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.navigation.Pose3D;
 
-@Autonomous
-public class TsunamiAutonomous extends OpMode {
+@TeleOp
+public class TsunamiTeleOpVermelho extends OpMode {
 
+    private ElapsedTime timer = new ElapsedTime();
     private ElapsedTime outtakeTimer = new ElapsedTime(); // Timer para o Outtake
+
     TsunamiChassis drive = new TsunamiChassis();
     TsunamiIntake intake = new TsunamiIntake();
     TsunamiOuttake outtake = new TsunamiOuttake();
@@ -20,7 +22,12 @@ public class TsunamiAutonomous extends OpMode {
 
     private Limelight3A limelight;
 
-    double robotAngle;
+    double forward, strafe, turn, motorIntake, motorOuttake, robotAngle;
+    boolean imuReset, autoIndexer, turnIndexer, turnMeioIndexer;
+
+    // Variáveis de controle de botão para detectar o "aperto" (borda de subida)
+    private boolean botao_x_pressed = false;
+    private boolean botao_b_pressed = false;
 
     // --- Máquina de Estados do INTAKE ---
     private enum IntakeState {
@@ -32,7 +39,7 @@ public class TsunamiAutonomous extends OpMode {
         WAITING_FOR_ARTIFACT_3, // Esperando o terceiro artifact
         FULL // Intake cheio
     }
-    private TsunamiAutonomous.IntakeState currentIntakeState = TsunamiAutonomous.IntakeState.INACTIVE;
+    private IntakeState currentIntakeState = IntakeState.INACTIVE;
 
     // Máquina de Estados do OUTTAKE
     private enum OuttakeState {
@@ -59,9 +66,8 @@ public class TsunamiAutonomous extends OpMode {
         WAIT_FOR_HOME,
         FINISHED
     }
-    private TsunamiAutonomous.OuttakeState currentOuttakeState = TsunamiAutonomous.OuttakeState.INACTIVE;
+    private OuttakeState currentOuttakeState = OuttakeState.INACTIVE;
 
-    private boolean hasArrived = false;
 
     @Override
     public void init() {
@@ -75,6 +81,8 @@ public class TsunamiAutonomous extends OpMode {
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
         limelight.pipelineSwitch(9); // April tag #24 pipeline (cesta vermelha)
 
+        timer.reset();
+
         // Garante que o indexador comece na posição inicial
         intake.goToInPos1();
     }
@@ -86,10 +94,29 @@ public class TsunamiAutonomous extends OpMode {
 
     @Override
     public void loop() {
-        // CHASSIS
+        // Gamepad 1 - CHASSIS
+        // controles
+        forward = -gamepad1.left_stick_y;
+        strafe = gamepad1.left_stick_x;
+        turn = gamepad1.right_stick_x;
+        imuReset = gamepad1.left_bumper;
+
         robotAngle = drive.getHeading();
 
-        // SUBSISTEMAS
+        if(imuReset){
+            drive.imu.resetYaw();
+        }
+        drive.driveFieldRelative(forward, strafe, turn);
+
+
+        // Gamepad 2 - SUBSISTEMAS
+        // controles
+        motorIntake = gamepad2.left_trigger;
+        motorOuttake = gamepad2.right_trigger;
+        autoIndexer = gamepad2.aWasPressed();
+        turnIndexer = gamepad2.dpadRightWasPressed();
+        turnMeioIndexer = gamepad2.dpadLeftWasPressed();
+
         LLResult llResult = limelight.getLatestResult();
         double tx = llResult.getTx();
         double ty = llResult.getTy();
@@ -103,36 +130,45 @@ public class TsunamiAutonomous extends OpMode {
 
         // rpm desejado para cada extremo
         double rpmNear = 2100;   // perto (tyMax)
-        double rpmFar = 3300;   // longe (tyMin)
+        double rpmFar  = 3300;   // longe (tyMin)
 
         // interpolation: tyMax → rpmNear   |   tyMin → rpmFar
         double targetRPM = rpmFar - normalized * (rpmFar - rpmNear);
 
+        // Lógica de Detecção de Botão
 
-        // Alterna o estado do Intake: INACTIVE -> WAITING_FOR_ARTIFACT_1 ou vice-versa
-        if (currentIntakeState == TsunamiAutonomous.IntakeState.INACTIVE) {
-            currentIntakeState = TsunamiAutonomous.IntakeState.WAITING_FOR_ARTIFACT_1;
+        // Aciona o INTAKE (X)
+        if (gamepad2.x && !botao_x_pressed) {
+            // Alterna o estado do Intake: INACTIVE -> WAITING_FOR_ARTIFACT_1 ou vice-versa
+            if (currentIntakeState == IntakeState.INACTIVE || currentIntakeState == IntakeState.FULL) {
+                currentIntakeState = IntakeState.WAITING_FOR_ARTIFACT_1;
+            } else {
+                currentIntakeState = IntakeState.INACTIVE;
+            }
         }
+        botao_x_pressed = gamepad2.x; // Atualiza o estado do botão
 
-
-        if (currentIntakeState == TsunamiAutonomous.IntakeState.FULL){
-            currentOuttakeState = TsunamiAutonomous.OuttakeState.START;
+        // Aciona o OUTTAKE (B)
+        if (gamepad2.b && !botao_b_pressed && currentOuttakeState == OuttakeState.INACTIVE) {
+            currentOuttakeState = OuttakeState.START;
             outtake.setTargetRPM(targetRPM); // Liga o motor do Outtake
         }
+        botao_b_pressed = gamepad2.b; // Atualiza o estado do botão
 
 
         // Motor do Intake
         // O motor só deve ligar se o estado não for INACTIVE ou FULL
-        // ✅ CORRETO:
         if (currentIntakeState != IntakeState.INACTIVE && currentIntakeState != IntakeState.FULL) {
-            intake.setPowerMotorIn(0.75);  // Liga quando ATIVO
+            intake.setPowerMotorIn(0.75);
         } else {
-            intake.setPowerMotorIn(0.0);   // Desliga quando inativo ou cheio
+            intake.setPowerMotorIn(motorIntake); // Permite controle manual se o automático estiver inativo
         }
 
         // Motores do Outtake
         // O motor do Outtake é ligado no início da máquina de estados do Outtake
-        if (currentOuttakeState != TsunamiAutonomous.OuttakeState.INACTIVE) {
+        if (currentOuttakeState == OuttakeState.INACTIVE) {
+            outtake.setOuttakePower(motorOuttake); // Permite controle manual se o automático estiver inativo
+        }else{
             outtake.updateShooterControl();
         }
 
@@ -143,27 +179,27 @@ public class TsunamiAutonomous extends OpMode {
                 // Fica neste estado até um artifact ser detectado
                 if (detectedColor == TsunamiIntake.DetectedColor.PURPLE || detectedColor == TsunamiIntake.DetectedColor.GREEN) {
                     intake.goToInPos2(); // Manda o motor para a próxima posição
-                    currentIntakeState = TsunamiAutonomous.IntakeState.MOVING_TO_SLOT_2;
+                    currentIntakeState = IntakeState.MOVING_TO_SLOT_2;
                 }
                 break;
 
             case MOVING_TO_SLOT_2:
                 // Espera o motor terminar o movimento
                 if (!intake.motorIndexer.isBusy()) {
-                    currentIntakeState = TsunamiAutonomous.IntakeState.WAITING_FOR_ARTIFACT_2; // Pronto para o próximo artifact
+                    currentIntakeState = IntakeState.WAITING_FOR_ARTIFACT_2; // Pronto para o próximo artifact
                 }
                 break;
 
             case WAITING_FOR_ARTIFACT_2:
                 if (detectedColor == TsunamiIntake.DetectedColor.PURPLE || detectedColor == TsunamiIntake.DetectedColor.GREEN) {
                     intake.goToInPos3();
-                    currentIntakeState = TsunamiAutonomous.IntakeState.MOVING_TO_SLOT_3;
+                    currentIntakeState = IntakeState.MOVING_TO_SLOT_3;
                 }
                 break;
 
             case MOVING_TO_SLOT_3:
                 if (!intake.motorIndexer.isBusy()) {
-                    currentIntakeState = TsunamiAutonomous.IntakeState.WAITING_FOR_ARTIFACT_3;
+                    currentIntakeState = IntakeState.WAITING_FOR_ARTIFACT_3;
                 }
                 break;
 
@@ -171,7 +207,7 @@ public class TsunamiAutonomous extends OpMode {
                 if (detectedColor == TsunamiIntake.DetectedColor.PURPLE || detectedColor == TsunamiIntake.DetectedColor.GREEN) {
                     // O intake está cheio, para o motor e muda de estado
                     intake.setPowerMotorIn(0.0);
-                    currentIntakeState = TsunamiAutonomous.IntakeState.FULL;
+                    currentIntakeState = IntakeState.FULL;
                 }
                 break;
 
@@ -187,14 +223,14 @@ public class TsunamiAutonomous extends OpMode {
             case START:
                 intake.goToOutPos1();
                 outtakeTimer.reset();
-                currentOuttakeState = TsunamiAutonomous.OuttakeState.WAIT_FOR_POS_1;
+                currentOuttakeState = OuttakeState.WAIT_FOR_POS_1;
                 break;
 
             case WAIT_FOR_POS_1:
                 // Espera o motor chegar E o tempo de 2000ms
                 if (!intake.motorIndexer.isBusy() && outtake.isAtTargetRPM(50)) {
                     outtakeTimer.reset();
-                    currentOuttakeState = TsunamiAutonomous.OuttakeState.DROP_ARTIFACT_1_WAIT_1;
+                    currentOuttakeState = OuttakeState.DROP_ARTIFACT_1_WAIT_1;
                 }
                 break;
 
@@ -203,7 +239,7 @@ public class TsunamiAutonomous extends OpMode {
                 if (outtakeTimer.milliseconds() >= 100 && outtake.isAtTargetRPM(50)) {
                     intake.setServoPos(0.3); // Sobe o servo
                     outtakeTimer.reset();
-                    currentOuttakeState = TsunamiAutonomous.OuttakeState.DROP_ARTIFACT_1_SERVO_OPEN;
+                    currentOuttakeState = OuttakeState.DROP_ARTIFACT_1_SERVO_OPEN;
                 }
                 break;
 
@@ -212,7 +248,7 @@ public class TsunamiAutonomous extends OpMode {
                 if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetRPM(50)) {
                     intake.setServoPos(0.0); // Fecha o servo
                     outtakeTimer.reset();
-                    currentOuttakeState = TsunamiAutonomous.OuttakeState.DROP_ARTIFACT_1_SERVO_CLOSE;
+                    currentOuttakeState = OuttakeState.DROP_ARTIFACT_1_SERVO_CLOSE;
                 }
                 break;
 
@@ -220,14 +256,14 @@ public class TsunamiAutonomous extends OpMode {
                 // Espera 250ms (sleep(250))
                 if (outtakeTimer.milliseconds() >= 100 && outtake.isAtTargetRPM(50)) {
                     outtakeTimer.reset();
-                    currentOuttakeState = TsunamiAutonomous.OuttakeState.DROP_ARTIFACT_1_WAIT_3;
+                    currentOuttakeState = OuttakeState.DROP_ARTIFACT_1_WAIT_3;
                 }
                 break;
 
             case DROP_ARTIFACT_1_WAIT_3:
                 // Espera 250ms (sleep(250))
                 if (outtakeTimer.milliseconds() >= 100 && outtake.isAtTargetRPM(50)) {
-                    currentOuttakeState = TsunamiAutonomous.OuttakeState.START_SLOT_1;
+                    currentOuttakeState = OuttakeState.START_SLOT_1;
                 }
                 break;
 
@@ -235,14 +271,14 @@ public class TsunamiAutonomous extends OpMode {
             case START_SLOT_1:
                 intake.goToOutPos2();
                 outtakeTimer.reset();
-                currentOuttakeState = TsunamiAutonomous.OuttakeState.WAIT_FOR_POS_2;
+                currentOuttakeState = OuttakeState.WAIT_FOR_POS_2;
                 break;
 
             case WAIT_FOR_POS_2:
                 // Espera o motor chegar E o tempo de 500ms
                 if (!intake.motorIndexer.isBusy() && outtake.isAtTargetRPM(50)) {
                     outtakeTimer.reset();
-                    currentOuttakeState = TsunamiAutonomous.OuttakeState.DROP_ARTIFACT_2_WAIT_1;
+                    currentOuttakeState = OuttakeState.DROP_ARTIFACT_2_WAIT_1;
                 }
                 break;
 
@@ -251,7 +287,7 @@ public class TsunamiAutonomous extends OpMode {
                 if (outtakeTimer.milliseconds() >= 100 && outtake.isAtTargetRPM(50)) {
                     intake.setServoPos(0.3); // Abre o servo
                     outtakeTimer.reset();
-                    currentOuttakeState = TsunamiAutonomous.OuttakeState.DROP_ARTIFACT_2_SERVO_OPEN;
+                    currentOuttakeState = OuttakeState.DROP_ARTIFACT_2_SERVO_OPEN;
                 }
                 break;
 
@@ -260,7 +296,7 @@ public class TsunamiAutonomous extends OpMode {
                 if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetRPM(50)) {
                     intake.setServoPos(0.0); // Fecha o servo
                     outtakeTimer.reset();
-                    currentOuttakeState = TsunamiAutonomous.OuttakeState.DROP_ARTIFACT_2_SERVO_CLOSE;
+                    currentOuttakeState = OuttakeState.DROP_ARTIFACT_2_SERVO_CLOSE;
                 }
                 break;
 
@@ -268,14 +304,14 @@ public class TsunamiAutonomous extends OpMode {
                 // Espera 250ms (sleep(250))
                 if (outtakeTimer.milliseconds() >= 100 && outtake.isAtTargetRPM(50)) {
                     outtakeTimer.reset();
-                    currentOuttakeState = TsunamiAutonomous.OuttakeState.DROP_ARTIFACT_2_WAIT_3;
+                    currentOuttakeState = OuttakeState.DROP_ARTIFACT_2_WAIT_3;
                 }
                 break;
 
             case DROP_ARTIFACT_2_WAIT_3:
                 // Espera 250ms (sleep(250))
                 if (outtakeTimer.milliseconds() >= 100 && outtake.isAtTargetRPM(50)) {
-                    currentOuttakeState = TsunamiAutonomous.OuttakeState.START_SLOT_2;
+                    currentOuttakeState = OuttakeState.START_SLOT_2;
                 }
                 break;
 
@@ -283,14 +319,14 @@ public class TsunamiAutonomous extends OpMode {
             case START_SLOT_2:
                 intake.goToOutPos3();
                 outtakeTimer.reset();
-                currentOuttakeState = TsunamiAutonomous.OuttakeState.WAIT_FOR_POS_3;
+                currentOuttakeState = OuttakeState.WAIT_FOR_POS_3;
                 break;
 
             case WAIT_FOR_POS_3:
                 // Espera o motor chegar E o tempo de 250ms
                 if (!intake.motorIndexer.isBusy() && outtake.isAtTargetRPM(50)) {
                     outtakeTimer.reset();
-                    currentOuttakeState = TsunamiAutonomous.OuttakeState.DROP_ARTIFACT_3_WAIT_1;
+                    currentOuttakeState = OuttakeState.DROP_ARTIFACT_3_WAIT_1;
                 }
                 break;
 
@@ -299,7 +335,7 @@ public class TsunamiAutonomous extends OpMode {
                 if (outtakeTimer.milliseconds() >= 100 && outtake.isAtTargetRPM(50)) {
                     intake.setServoPos(0.3); // Abre o servo
                     outtakeTimer.reset();
-                    currentOuttakeState = TsunamiAutonomous.OuttakeState.DROP_ARTIFACT_3_SERVO_OPEN;
+                    currentOuttakeState = OuttakeState.DROP_ARTIFACT_3_SERVO_OPEN;
                 }
                 break;
 
@@ -308,7 +344,7 @@ public class TsunamiAutonomous extends OpMode {
                 if (outtakeTimer.milliseconds() >= 250 && outtake.isAtTargetRPM(50)) {
                     intake.setServoPos(0.0); // Fecha o servo
                     outtakeTimer.reset();
-                    currentOuttakeState = TsunamiAutonomous.OuttakeState.DROP_ARTIFACT_3_SERVO_CLOSE;
+                    currentOuttakeState = OuttakeState.DROP_ARTIFACT_3_SERVO_CLOSE;
                 }
                 break;
 
@@ -316,7 +352,7 @@ public class TsunamiAutonomous extends OpMode {
                 // Espera 250ms (sleep(250))
                 if (outtakeTimer.milliseconds() >= 100 && outtake.isAtTargetRPM(50)) {
                     outtakeTimer.reset();
-                    currentOuttakeState = TsunamiAutonomous.OuttakeState.GO_TO_HOME;
+                    currentOuttakeState = OuttakeState.GO_TO_HOME;
                 }
                 break;
 
@@ -325,26 +361,42 @@ public class TsunamiAutonomous extends OpMode {
                 if (outtakeTimer.milliseconds() >= 100 && outtake.isAtTargetRPM(50)) {
                     intake.goToInPos1(); // Volta para a posição inicial
                     outtakeTimer.reset();
-                    currentOuttakeState = TsunamiAutonomous.OuttakeState.WAIT_FOR_HOME;
+                    currentOuttakeState = OuttakeState.WAIT_FOR_HOME;
                 }
                 break;
 
             case WAIT_FOR_HOME:
                 // Espera 1000ms (sleep(1000))
                 if (outtakeTimer.milliseconds() >= 100 && outtake.isAtTargetRPM(50)) {
-                    currentOuttakeState = TsunamiAutonomous.OuttakeState.FINISHED;
+                    currentOuttakeState = OuttakeState.FINISHED;
                 }
                 break;
 
             case FINISHED:
                 outtake.setTargetRPM(0.0);
-                currentOuttakeState = TsunamiAutonomous.OuttakeState.INACTIVE;
-                currentIntakeState = TsunamiAutonomous.IntakeState.INACTIVE;
+                outtake.setOuttakePower(motorOuttake); // Volta o controle do motor para o gamepad
+                currentOuttakeState = OuttakeState.INACTIVE;
                 break;
 
             case INACTIVE:
                 // Não faz nada, espera o botão ser pressionado.
                 break;
+        }
+
+
+        // --- Outros Controles (Mantidos) ---
+        if(gamepad2.dpad_down) {
+            intake.setServoPos(0.0);
+        }else if(gamepad2.dpad_up){
+            intake.setServoPos(0.3);
+        }
+
+        if(turnIndexer) {
+            intake.setMotorIndexer();
+        }
+
+        if(turnMeioIndexer){
+            intake.setMeioMotorIndexer();
         }
 
         if(llResult != null && llResult.isValid()){
@@ -418,6 +470,11 @@ public class TsunamiAutonomous extends OpMode {
 
         telemetry.addLine("DADOS DA TORRETA");
         telemetry.addData("Posição X da torreta", outtake.getServoTurretXCurrentPosition());
+        telemetry.addLine();
+
+
+        telemetry.addLine("TIMER");
+        telemetry.addData("Status", "Run Time: " + timer.seconds());
         telemetry.addLine();
 
         telemetry.addLine("ENERGIA");
