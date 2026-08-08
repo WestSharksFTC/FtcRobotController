@@ -52,7 +52,7 @@ public class Prototype extends OpMode {
 
         rightFrontMotor.setDirection(DcMotor.Direction.FORWARD);
         rightBackMotor.setDirection(DcMotor.Direction.FORWARD);
-        leftFrontMotor.setDirection(DcMotor.Direction.FORWARD);
+        leftFrontMotor.setDirection(DcMotor.Direction.REVERSE);
         leftBackMotor.setDirection(DcMotor.Direction.REVERSE);
         intake.setDirection(DcMotor.Direction.REVERSE);
         outtake.setDirection(DcMotorSimple.Direction.REVERSE);
