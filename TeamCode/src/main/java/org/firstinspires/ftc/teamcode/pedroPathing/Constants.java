@@ -18,25 +18,25 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 public class Constants {
     public static FollowerConstants followerConstants = new FollowerConstants()
-            .mass(6); // Robot mass in Kg
-            // .forwardZeroPowerAcceleration(-66.90421051201155) // Automatic -> Forward Zero Power Acceleration Tuner
-            // .lateralZeroPowerAcceleration(-71.77026895215866) // Automatic -> Lateral Zero Power Acceleration Tuner
+            .mass(6) // Robot mass in Kg
+            .forwardZeroPowerAcceleration(-54.17400197073291) // Automatic -> Forward Zero Power Acceleration Tuner
+            .lateralZeroPowerAcceleration(-64.29726930830856) // Automatic -> Lateral Zero Power Acceleration Tuner
 
-            // .translationalPIDFCoefficients(new PIDFCoefficients(0, 0, 0, 0)); // Manual -> Translational Tuner
+            .translationalPIDFCoefficients(new PIDFCoefficients(0.05, 0, 0.005, 0.03)) // Manual -> Translational Tuner
                 // Tuning -> follower -> constants -> coefficientsTranslationalPIDf
                 // P = 0, I = 0, D = 0, F = 0
                 // F -> Decrease until the robot stop shaking (pull the robot)
                 // P -> Pull the robot and increase until the correction is correct (undercorrect > CORRECT < overcorrect)
                 // D -> Pull the robot and increase until the robot doesn't pass the original position (overSmooth(very slow) > CORRECT < underSmooth(very fast))
 
-            // .headingPIDFCoefficients(new PIDFCoefficients(0, 0, 0, 0)); // Manual -> Heading Tuner
+            .headingPIDFCoefficients(new PIDFCoefficients(1, 0, 0.05, 0.025)) // Manual -> Heading Tuner
                 // Tuning -> follower -> constants -> coefficientsHeadingPIDf
                 // P = 0, I = 0, D = 0, F = 0
                 // F -> Decrease until the robot stop shaking (pull the robot)
                 // P -> Pull the robot and increase until the correction is correct (undercorrect > CORRECT < overcorrect)
                 // D -> Pull the robot and increase until the robot doesn't pass the original position (overSmooth(very slow) > CORRECT < underSmooth(very fast))
 
-            // .drivePIDFCoefficients(new FilteredPIDFCoefficients(0, 0, 0, 0, 0)); // Manual -> Drive Tuner (IMPORTANT: Just tune this part after tune the braking strength)
+            .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.025, 0, 0.00001, 0.6, 0.01)); // Manual -> Drive Tuner (IMPORTANT: Just tune this part after tune the braking strength)
                 // Tuning -> follower -> constants -> coefficientsDrivePIDf
                 // P = 0, I = 0, D = 0, T = don't touch in this value, F = 0
                 // F -> IDK part 1
@@ -58,9 +58,9 @@ public class Constants {
             .leftFrontMotorDirection(DcMotor.Direction.FORWARD)
             .leftRearMotorDirection(DcMotor.Direction.FORWARD)
             .rightFrontMotorDirection(DcMotor.Direction.REVERSE)
-            .rightRearMotorDirection(DcMotor.Direction.REVERSE);
-            // .xVelocity(36.78062955601009) // Automatic -> Forward Velocity Tuner
-            // .yVelocity(29.35445374015748); // Automatic -> Lateral Velocity Tuner
+            .rightRearMotorDirection(DcMotor.Direction.REVERSE)
+            .xVelocity(73.34618227500617) // Automatic -> Forward Velocity Tuner
+            .yVelocity(61.637128214197844); // Automatic -> Lateral Velocity Tuner
 
     public static PathConstraints pathConstraints = new PathConstraints(0.99, 100, 1, 1); // Manual -> Drive Tuner
         // Tuning -> follower -> pathConstraints
