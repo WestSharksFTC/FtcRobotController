@@ -22,7 +22,7 @@ public class Constants {
             .forwardZeroPowerAcceleration(-54.17400197073291) // Automatic -> Forward Zero Power Acceleration Tuner
             .lateralZeroPowerAcceleration(-64.29726930830856) // Automatic -> Lateral Zero Power Acceleration Tuner
 
-            .translationalPIDFCoefficients(new PIDFCoefficients(0.05, 0, 0.005, 0.03)) // Manual -> Translational Tuner
+            .translationalPIDFCoefficients(new PIDFCoefficients(0.05, -0.005, 0.005, 0.03)) // Manual -> Translational Tuner
                 // Tuning -> follower -> constants -> coefficientsTranslationalPIDf
                 // P = 0, I = 0, D = 0, F = 0
                 // F -> Decrease until the robot stop shaking (pull the robot)
@@ -36,7 +36,7 @@ public class Constants {
                 // P -> Pull the robot and increase until the correction is correct (undercorrect > CORRECT < overcorrect)
                 // D -> Pull the robot and increase until the robot doesn't pass the original position (overSmooth(very slow) > CORRECT < underSmooth(very fast))
 
-            .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.025, 0, 0.00001, 0.6, 0.01)); // Manual -> Drive Tuner (IMPORTANT: Just tune this part after tune the braking strength)
+            .drivePIDFCoefficients(new FilteredPIDFCoefficients(0.005, 0, 0.0015, 0.6, 0.51)); // Manual -> Drive Tuner (IMPORTANT: Just tune this part after tune the braking strength)
                 // Tuning -> follower -> constants -> coefficientsDrivePIDf
                 // P = 0, I = 0, D = 0, T = don't touch in this value, F = 0
                 // F -> IDK part 1

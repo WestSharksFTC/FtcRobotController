@@ -1159,6 +1159,11 @@ class DriveTuner extends OpMode {
         telemetryM.debug("Driving forward?: " + forward);
         telemetryM.addData("Zero Line", 0);
         telemetryM.addData("Error", follower.errorCalculator.getDriveErrors()[1]);
+        // Se o robô estiver andando para frente/trás (Eixo X)
+        telemetryM.addData("Velocity", follower.getVelocity().getXComponent());
+        telemetryM.addData("Acceleration", follower.getAcceleration().getXComponent());
+        telemetryM.addData("FowardVelocity", 54.17400197073291);
+        telemetryM.addData("BackwardVelocity", -54.17400197073291);
         telemetryM.update(telemetry);
     }
 }
