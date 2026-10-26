@@ -1,0 +1,114 @@
+package org.firstinspires.ftc.teamcode.BioBuzz;
+
+import com.qualcomm.robotcore.eventloop.opmode.OpMode;
+import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import org.firstinspires.ftc.teamcode.BioBuzz.subsystems.WDChassis;
+import org.firstinspires.ftc.teamcode.BioBuzz.subsystems.WDIndexer;
+import org.firstinspires.ftc.teamcode.BioBuzz.subsystems.WDIntake;
+import org.firstinspires.ftc.teamcode.BioBuzz.subsystems.WDOuttake;
+
+@TeleOp
+public class TheWhiteDuck extends OpMode {
+    WDChassis chassis = new WDChassis();
+    WDIntake intake = new WDIntake();
+    WDIndexer indexer = new WDIndexer();
+    WDOuttake outtake = new WDOuttake();
+    double drive, strafe, turn, intakePower, indexerPower, outtakeVelocity;
+    boolean driveMode, intakeStatus, indexerStatus, outtakeStatus;
+
+    @Override
+    public void init() {
+        chassis.init(hardwareMap);
+        intake.init(hardwareMap);
+        indexer.init(hardwareMap);
+        outtake.init(hardwareMap);
+
+        intake.upFlowerRamp();
+    }
+
+    @Override
+    public void loop() {
+        drive = gamepad1.left_stick_y;
+        strafe = gamepad1.left_stick_x;
+        turn = gamepad1.right_stick_x;
+
+        // Reset angle
+        if(gamepad1.leftStickButtonWasPressed()){
+            chassis.resetYaw();
+        }
+
+        // Drive mode
+        if(gamepad1.rightStickButtonWasPressed()) {
+            driveMode = !driveMode;
+        }
+
+        if(driveMode){
+            chassis.driveFieldRelative(drive, strafe, turn);
+        }else{
+            chassis.drive(drive, strafe, turn);
+        }
+
+        // Intake
+        intake.setPower(intakePower);
+
+        if(gamepad1.xWasPressed()) {
+            intakeStatus = !intakeStatus;
+        }
+
+        if(intakeStatus){
+            intakePower = -0.8;
+        }else{
+            intakePower = 0.0;
+        }
+
+        // Servo da rampa da flower
+        if(gamepad1.dpadUpWasPressed()){
+            intake.upFlowerRamp();
+        }else if(gamepad1.dpadDownWasPressed()){
+            intake.downFlowerRamp();
+        }
+
+        // Indexer
+        indexer.setPower(indexerPower);
+
+        if(gamepad1.yWasPressed()) {
+            indexerStatus = !indexerStatus;
+        }
+
+        if(indexerStatus){
+            indexerPower = 0.8;
+        }else{
+            indexerPower = 0.0;
+        }
+
+        // Servo do indexer
+        if(gamepad1.rightBumperWasPressed()){
+            indexer.closeServo();
+        }else if(gamepad1.leftBumperWasPressed()){
+            indexer.openServo();
+        }
+
+        // Outtake
+        outtake.setVelocity(outtakeVelocity);
+
+        if(gamepad1.rightTriggerWasPressed()) {
+            outtakeStatus = !outtakeStatus;
+        }
+
+        if(outtakeStatus){
+            outtakeVelocity = -800.0;
+        }else{
+            outtakeVelocity = 0.0;
+        }
+
+
+        telemetry.addData("Angulo", chassis.getImuYaw());
+        telemetry.addData("Drive Mode", driveMode ? "FIELD Oriented Drive" : "ROBOT Oriented Drive");
+        telemetry.addData("Intake Power", intakePower);
+        telemetry.addData("Indexer Power", indexerPower);
+        telemetry.addData("Pollen Gate", indexer.isClosed());
+        telemetry.addData("Servo Right Position", intake.getRightServoPosition());
+        telemetry.addData("Servo Left Position", intake.getLeftServoPosition());
+        telemetry.addData("Outtake Velocity", outtake.getVelocity());
+    }
+}

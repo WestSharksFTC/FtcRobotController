@@ -12,52 +12,150 @@ import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 import static com.pedropathing.ivy.Scheduler.schedule;
 import static com.pedropathing.ivy.commands.Commands.*;
 import static com.pedropathing.ivy.groups.Groups.sequential;
+import static com.pedropathing.ivy.groups.Groups.parallel; // Importante para rodar intake e movimento juntos!
 import static com.pedropathing.ivy.pedro.PedroCommands.follow;
+
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
 @Autonomous(name = "PS5_V2-AutonomousComplete", group = "Autonomous")
 public class PS5_V2 extends LinearOpMode {
 
     private Follower follower;
+    private DcMotor intake;
+    private DcMotor outtake;
+    private CRServo servoIntake;
 
-    // A fábrica de Poses em graus está correta para a nova versão!
     private final PoseFactory poseFactory = PoseFactory.degrees();
 
     private final Pose start = poseFactory.of(56, 8, 90);
-    private final Pose moveToGarden = poseFactory.of(20, 8, 180);
-    private final Pose collectGarden = poseFactory.of(8, 8, 180);
-    private final Pose shoot2 = poseFactory.of(60, 132, 270);
+    private final Pose startToGardenTurning = poseFactory.of(20, 8, 180);
+    private final Pose gardenTurningToGardenCollect = poseFactory.of(8, 8, 180);
+    private final Pose gardenCollectToShootPos2 = poseFactory.of(60, 132, 270);
+    private final Pose gardenCollectToShootPos2Control1 = poseFactory.of(35, 35, 0);
+    private final Pose gardenCollectToShootPos2Control2 = poseFactory.of(15, 125, 0);
+    private final Pose gardenCollectToShootPos2Control3 = poseFactory.of(55, 100, 0);
+    private final Pose shootPos2ToCollectFlower1 = poseFactory.of(47, 132, 90);
+    private final Pose shootPos2ToCollectFlower1Control1 = poseFactory.of(54, 120, 0);
+    private final Pose collectFlower1ToShootPos3 = poseFactory.of(60, 132, 270);
+    private final Pose collectFlower1ToShootPos3Control1 = poseFactory.of(54, 120, 0);
+    private final Pose shootPos3ToCollectFlower2 = poseFactory.of(8, 47, 180);
+    private final Pose shootPos3ToCollectFlower2Control1 = poseFactory.of(10, 100, 0);
+    private final Pose shootPos3ToCollectFlower2Control2 = poseFactory.of(37.8364, 40.7743, 0);
+    private final Pose collectFlower2ToShootPos4 = poseFactory.of(56, 8, 90);
+    private final Pose shootPos4ToParkPos = poseFactory.of(10.293, 95, 90);
+    private final Pose shootPos4ToParkPosControl1 = poseFactory.of(20, 30, 0);
 
-    // Ajustado para 2 pontos de controle (Bézier Cúbica)
-    private final Pose shoot2Control1 = poseFactory.of(35, 35, 0);
-    private final Pose shoot2Control2 = poseFactory.of(15, 125, 0);
+    public Path startToGardenTurning() {
+        return line(start, startToGardenTurning).linear(start, startToGardenTurning);
+    }
 
-    private final Pose collectFlower1 = poseFactory.of(47, 132, 90);
-    private final Pose collectFlower1Control1 = poseFactory.of(54, 120, 0);
+    public Path gardenTurningToGardenCollect() {
+        return line(startToGardenTurning, gardenTurningToGardenCollect).tangent();
+    }
 
-    private final Pose shoot3 = poseFactory.of(60, 132, 270);
-    private final Pose shoot3Control1 = poseFactory.of(54, 120, 0);
+    public Path gardenCollectToShootPos2() {
+        return curve(gardenTurningToGardenCollect, gardenCollectToShootPos2Control1, gardenCollectToShootPos2Control2, gardenCollectToShootPos2Control3, gardenCollectToShootPos2).linear(gardenTurningToGardenCollect, gardenCollectToShootPos2);
+    }
 
-    private final Pose point6 = poseFactory.of(56, 30, -92.2457);
-    private final Pose point7 = poseFactory.of(56, 8, 90);
-    private final Pose point8 = poseFactory.of(8, 47, 180);
-    private final Pose point9 = poseFactory.of(56, 8, 90);
-    private final Pose point10 = poseFactory.of(10, 95, 90);
-    private final Pose point10Control1 = poseFactory.of(20, 30, 0);
+    public Path shootPos2ToCollectFlower1() {
+        return curve(gardenCollectToShootPos2, shootPos2ToCollectFlower1Control1, shootPos2ToCollectFlower1).linear(gardenCollectToShootPos2, shootPos2ToCollectFlower1);
+    }
+
+    public Path collectFlower1ToShootPos3() {
+        return curve(shootPos2ToCollectFlower1, collectFlower1ToShootPos3Control1, collectFlower1ToShootPos3).linear(shootPos2ToCollectFlower1, collectFlower1ToShootPos3);
+    }
+
+    public Path shootPos3ToCollectFlower2() {
+        return curve(collectFlower1ToShootPos3, shootPos3ToCollectFlower2Control1, shootPos3ToCollectFlower2Control2, shootPos3ToCollectFlower2).linear(collectFlower1ToShootPos3, shootPos3ToCollectFlower2);
+    }
+
+    public Path collectFlower2ToShootPos4() {
+        return line(shootPos3ToCollectFlower2, collectFlower2ToShootPos4).linear(shootPos3ToCollectFlower2, collectFlower2ToShootPos4);
+    }
+
+    public Path shootPos4ToParkPos() {
+        return curve(collectFlower2ToShootPos4, shootPos4ToParkPosControl1, shootPos4ToParkPos).constant(shootPos4ToParkPos);
+    }
+
+    // Comando auxiliar customizado para ligar/desligar o intake via Ivy Scheduler
+    public Command setIntakePower(double power) {
+        return instant(() -> {
+            if (intake != null) intake.setPower(power);
+            if (servoIntake != null) servoIntake.setPower(power > 0 ? 1.0 : 0.0);
+        });
+    }
+
+    public Command setOuttakePower(double power) {
+        return instant(() -> {
+            if (outtake != null) outtake.setPower(power);
+        });
+    }
 
     public Command autoRoutine() {
         return sequential(
-                follow(follower, moveToGarden()),
-                follow(follower, collectGarden()),
-                follow(follower, shoot2()),
-                follow(follower, collectFlower1()),
-                follow(follower, shoot3()),
-                follow(follower, path6()),
-                follow(follower, path7()),
-                follow(follower, path8()),
-                follow(follower, path9()),
-                follow(follower, path10())
+                setOuttakePower(1.0),
+                waitMs(500),
+                setIntakePower(0.5),
+                waitMs(2000),
+
+                // 1. Vai para o jardim ligando o intake
+                parallel(
+                        follow(follower, startToGardenTurning()),
+                        setIntakePower(0.8)
+                ),
+
+                follow(follower, gardenTurningToGardenCollect()),
+
+                waitMs(1500),
+
+                // 2. Vai para a posição de tiro 2 com o intake ligado
+                parallel(
+                        follow(follower, gardenCollectToShootPos2()),
+                        setIntakePower(1.0)
+                ),
+
+                setIntakePower(0.0),
+
+                waitMs(2000),
+
+                // 3. Vai para coletar a flor 1 com o intake ligado
+                parallel(
+                        follow(follower, shootPos2ToCollectFlower1()),
+                        setIntakePower(0.8)
+                ),
+
+                waitMs(1500),
+
+                // 4. Vai para a posição de tiro 3 e desliga o intake
+                parallel(
+                        follow(follower, collectFlower1ToShootPos3()),
+                        setIntakePower(1.0)
+                ),
+
+                setIntakePower(0.0),
+
+                waitMs(2000),
+
+                // 5. Demais trajetos finais
+                parallel(
+                        follow(follower, shootPos3ToCollectFlower2()),
+                        setIntakePower(0.8)
+                ),
+
+                parallel(
+                        follow(follower, collectFlower2ToShootPos4()),
+                        setIntakePower(1.0)
+                ),
+
+                setIntakePower(0.0),
+
+                waitMs(2000),
+
+                follow(follower, shootPos4ToParkPos())
         );
     }
 
@@ -65,6 +163,15 @@ public class PS5_V2 extends LinearOpMode {
     public void runOpMode() {
         Scheduler.reset();
         follower = Constants.create(hardwareMap);
+
+        // Inicializa os motores do Intake também no autônomo
+        intake = hardwareMap.get(DcMotor.class, "in");
+        outtake = hardwareMap.get(DcMotor.class, "out");
+        servoIntake = hardwareMap.get(CRServo.class, "servo_intake");
+        intake.setDirection(DcMotor.Direction.FORWARD);
+        outtake.setDirection(DcMotorSimple.Direction.REVERSE);
+        servoIntake.setDirection(CRServo.Direction.FORWARD);
+
         follower.setPose(start);
         follower.update();
 
@@ -79,57 +186,8 @@ public class PS5_V2 extends LinearOpMode {
             telemetry.addData("x", follower.pose().x());
             telemetry.addData("y", follower.pose().y());
             telemetry.addData("heading", follower.pose().heading());
-
-            if (follower.currentPath() != null) {
-                telemetry.addData("Current path distance remaining", follower.distanceToEndpoint());
-            }
-
+            telemetry.addData("motor_velocity", follower.velocity());
             telemetry.update();
         }
-    }
-
-    public Path moveToGarden() {
-        return line(start, moveToGarden).linear(start.heading(), moveToGarden.heading());
-    }
-
-    public Path collectGarden() {
-        return line(moveToGarden, collectGarden).linear(moveToGarden.heading(), collectGarden.heading());
-    }
-
-    public Path shoot2() {
-        // Correção de Bézier Cúbica (Máximo de 2 pontos de controle)
-        return curve(collectGarden, shoot2Control1, shoot2Control2, shoot2)
-                .linear(collectGarden.heading(), shoot2.heading());
-    }
-
-    public Path collectFlower1() {
-        return curve(shoot2, collectFlower1Control1, collectFlower1)
-                .linear(shoot2.heading(), collectFlower1.heading());
-    }
-
-    public Path shoot3() {
-        return curve(collectFlower1, shoot3Control1, shoot3)
-                .linear(collectFlower1.heading(), shoot3.heading());
-    }
-
-    public Path path6() {
-        return line(shoot3, point6).linear(shoot3.heading(), point6.heading());
-    }
-
-    public Path path7() {
-        // Conectado diretamente a partir de point6
-        return line(point6, point7).linear(point6.heading(), point7.heading());
-    }
-
-    public Path path8() {
-        return line(point7, point8).linear(point7.heading(), point8.heading());
-    }
-
-    public Path path9() {
-        return line(point8, point9).linear(point8.heading(), point9.heading());
-    }
-
-    public Path path10() {
-        return curve(point9, point10Control1, point10).constant(point10.heading());
     }
 }
