@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.BioBuzz;
+package org.firstinspires.ftc.teamcode.BioBuzz.CADathom;
 
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
@@ -7,7 +7,7 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.Servo;
 
-@TeleOp
+@TeleOp(name = "Prototype Complete", group = "Prototype Biobuzz")
 public class Prototype extends OpMode {
     // Declaração dos membros OpMode
     private DcMotor rightFrontMotor = null;

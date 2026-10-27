@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.BioBuzz;
+package org.firstinspires.ftc.teamcode.BioBuzz.CADathom;
 
 import static com.pedropathing.api.Paths.*;
 
@@ -21,8 +21,8 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
-@Autonomous(name = "PS5_V2-AutonomousComplete", group = "Autonomous")
-public class PS5_V2 extends LinearOpMode {
+@Autonomous(name = "Prototype Autonomous Complete", group = "Prototype Biobuzz")
+public class PrototypeAUTO extends LinearOpMode {
 
     private Follower follower;
     private DcMotor intake;

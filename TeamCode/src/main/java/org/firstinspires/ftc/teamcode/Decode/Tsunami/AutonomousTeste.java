@@ -1,8 +1,10 @@
 package org.firstinspires.ftc.teamcode.Decode.Tsunami;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
+@Disabled
 @Autonomous
 public class AutonomousTeste extends OpMode {
 

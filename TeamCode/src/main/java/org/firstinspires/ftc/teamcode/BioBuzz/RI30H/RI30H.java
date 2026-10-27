@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.BioBuzz;
+package org.firstinspires.ftc.teamcode.BioBuzz.RI30H;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -8,7 +8,7 @@ import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.util.ElapsedTime;
 
-@TeleOp(name = "RI30H - Consistente", group = "BioBuzz")
+@TeleOp(name = "RI30H - Consistente", group = "RI30H BioBuzz")
 public class RI30H extends OpMode {
 
     // Estados da Sequência de Disparo
