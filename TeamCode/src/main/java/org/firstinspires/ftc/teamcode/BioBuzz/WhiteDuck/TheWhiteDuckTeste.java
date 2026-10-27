@@ -1,14 +1,14 @@
-package org.firstinspires.ftc.teamcode.BioBuzz;
+package org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import org.firstinspires.ftc.teamcode.BioBuzz.subsystems.WDChassis;
-import org.firstinspires.ftc.teamcode.BioBuzz.subsystems.WDIndexer;
-import org.firstinspires.ftc.teamcode.BioBuzz.subsystems.WDIntake;
-import org.firstinspires.ftc.teamcode.BioBuzz.subsystems.WDOuttake;
+import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.subsystems.WDChassis;
+import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.subsystems.WDIndexer;
+import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.subsystems.WDIntake;
+import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.subsystems.WDOuttake;
 
-@TeleOp
-public class TheWhiteDuck extends OpMode {
+@TeleOp(name = "WhiteDuck Teste", group = "WhiteDuck")
+public class TheWhiteDuckTeste extends OpMode {
     WDChassis chassis = new WDChassis();
     WDIntake intake = new WDIntake();
     WDIndexer indexer = new WDIndexer();
@@ -49,17 +49,17 @@ public class TheWhiteDuck extends OpMode {
         }
 
         // Intake
-        intake.setPower(intakePower);
-
         if(gamepad1.xWasPressed()) {
             intakeStatus = !intakeStatus;
         }
 
         if(intakeStatus){
-            intakePower = -0.8;
+            intakePower = 0.8;
         }else{
             intakePower = 0.0;
         }
+
+        intake.setPower(intakePower);
 
         // Servo da rampa da flower
         if(gamepad1.dpadUpWasPressed()){
@@ -69,8 +69,6 @@ public class TheWhiteDuck extends OpMode {
         }
 
         // Indexer
-        indexer.setPower(indexerPower);
-
         if(gamepad1.yWasPressed()) {
             indexerStatus = !indexerStatus;
         }
@@ -81,6 +79,8 @@ public class TheWhiteDuck extends OpMode {
             indexerPower = 0.0;
         }
 
+        indexer.setPower(indexerPower);
+
         // Servo do indexer
         if(gamepad1.rightBumperWasPressed()){
             indexer.closeServo();
@@ -89,17 +89,17 @@ public class TheWhiteDuck extends OpMode {
         }
 
         // Outtake
-        outtake.setVelocity(outtakeVelocity);
-
-        if(gamepad1.rightTriggerWasPressed()) {
+        if(gamepad1.bWasPressed()) {
             outtakeStatus = !outtakeStatus;
         }
 
         if(outtakeStatus){
-            outtakeVelocity = -800.0;
+            outtakeVelocity = 800.0;
         }else{
             outtakeVelocity = 0.0;
         }
+
+        outtake.setVelocity(outtakeVelocity);
 
 
         telemetry.addData("Angulo", chassis.getImuYaw());

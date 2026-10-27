@@ -1,8 +1,9 @@
-package org.firstinspires.ftc.teamcode.BioBuzz.subsystems;
+package org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.subsystems;
 
 import androidx.annotation.NonNull;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 
@@ -18,7 +19,7 @@ public class WDIntake {
         flowerRampRight = hardwareMap.get(Servo.class, "flowerRampRight");
         flowerRampLeft = hardwareMap.get(Servo.class, "flowerRampLeft");
 
-        intake.setDirection(DcMotor.Direction.REVERSE);
+        intake.setDirection(DcMotor.Direction.FORWARD);
         flowerRampRight.setDirection(Servo.Direction.REVERSE);
         flowerRampLeft.setDirection(Servo.Direction.FORWARD);
 

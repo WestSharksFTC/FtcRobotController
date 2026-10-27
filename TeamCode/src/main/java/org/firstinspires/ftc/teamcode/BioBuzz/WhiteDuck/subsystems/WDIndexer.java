@@ -1,17 +1,22 @@
-package org.firstinspires.ftc.teamcode.BioBuzz.subsystems;
+package org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.subsystems;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
+
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 public class WDIndexer {
     public DcMotor indexer;
     public Servo pollenLimiter;
+    public DistanceSensor pollenSensor;
 
     public void init(HardwareMap hardwareMap){
         // Motor
         indexer = hardwareMap.get(DcMotor.class, "indexer");
         pollenLimiter = hardwareMap.get(Servo.class, "pollenLimiter");
+        pollenSensor = hardwareMap.get(DistanceSensor.class, "pollenSensor");
 
         indexer.setDirection(DcMotor.Direction.REVERSE);
         pollenLimiter.setDirection(Servo.Direction.FORWARD);
@@ -39,4 +44,7 @@ public class WDIndexer {
         return pollenLimiter.getPosition() == 1.0 ? "CLOSED" : "OPENED";
     }
 
+    public double getDistanceCM() {
+        return pollenSensor.getDistance(DistanceUnit.CM);
+    }
 }

@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.BioBuzz.subsystems;
+package org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.subsystems;
 
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
