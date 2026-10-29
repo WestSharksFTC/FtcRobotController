@@ -32,7 +32,7 @@ public class Prototype extends OpMode {
         rightBackMotor = hardwareMap.get(DcMotor.class, "rb");
         leftFrontMotor = hardwareMap.get(DcMotor.class, "lf");
         leftBackMotor = hardwareMap.get(DcMotor.class, "lb");
-        intake = hardwareMap.get(DcMotor.class, "in");
+        intake = hardwareMap.get(DcMotor.class, "intake");
         outtake = hardwareMap.get(DcMotor.class, "viper");
 
         rightFrontMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);

@@ -114,9 +114,9 @@ public class TheWhiteDuck extends OpMode {
             case SHOOTING_SPINUP:
                 intake.setPower(-0.2);
                 indexer.setPower(0.0);
-                outtake.setVelocity(800.0);
+                outtake.setVelocity(760.0);
 
-                if (Math.abs(outtake.getVelocity() - 800.0) < 25.0) {
+                if (Math.abs(outtake.getVelocity() - 760.0) < 25.0) {
                     shootTimer.reset(); // Reseta um cronômetro para o tempo de disparo
                     currentState = RobotState.SHOOTING_FIRE;
                 }

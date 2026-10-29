@@ -27,7 +27,6 @@ public class PrototypeAUTO extends LinearOpMode {
     private Follower follower;
     private DcMotor intake;
     private DcMotor outtake;
-    private CRServo servoIntake;
 
     private final PoseFactory poseFactory = PoseFactory.degrees();
 
@@ -85,7 +84,6 @@ public class PrototypeAUTO extends LinearOpMode {
     public Command setIntakePower(double power) {
         return instant(() -> {
             if (intake != null) intake.setPower(power);
-            if (servoIntake != null) servoIntake.setPower(power > 0 ? 1.0 : 0.0);
         });
     }
 
@@ -165,12 +163,10 @@ public class PrototypeAUTO extends LinearOpMode {
         follower = Constants.create(hardwareMap);
 
         // Inicializa os motores do Intake também no autônomo
-        intake = hardwareMap.get(DcMotor.class, "in");
-        outtake = hardwareMap.get(DcMotor.class, "out");
-        servoIntake = hardwareMap.get(CRServo.class, "servo_intake");
+        intake = hardwareMap.get(DcMotor.class, "intake");
+        outtake = hardwareMap.get(DcMotor.class, "outtake");
         intake.setDirection(DcMotor.Direction.FORWARD);
         outtake.setDirection(DcMotorSimple.Direction.REVERSE);
-        servoIntake.setDirection(CRServo.Direction.FORWARD);
 
         follower.setPose(start);
         follower.update();

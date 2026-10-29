@@ -74,7 +74,7 @@ public class TheWhiteDuckTeste extends OpMode {
         }
 
         if(indexerStatus){
-            indexerPower = 0.8;
+            indexerPower = 1.0;
         }else{
             indexerPower = 0.0;
         }
@@ -94,7 +94,7 @@ public class TheWhiteDuckTeste extends OpMode {
         }
 
         if(outtakeStatus){
-            outtakeVelocity = 800.0;
+            outtakeVelocity = 760.0;
         }else{
             outtakeVelocity = 0.0;
         }
