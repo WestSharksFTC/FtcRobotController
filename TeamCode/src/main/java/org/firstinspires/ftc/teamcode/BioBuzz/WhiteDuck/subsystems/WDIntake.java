@@ -27,8 +27,8 @@ public class WDIntake {
 
         intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
-        flowerRampRight.scaleRange(0.15, 0.85);
-        flowerRampLeft.scaleRange(0.15, 0.85);
+        flowerRampRight.scaleRange(0.050, 0.125);
+        flowerRampLeft.scaleRange(0.90, 0.975);
     }
 
     public void setPower(double power){
@@ -46,6 +46,14 @@ public class WDIntake {
 
     public void upFlowerRamp(){
         setFlowerRampPosition(1.0);
+    }
+
+    public void setRightFlowerRampPosition(double servoPosition){
+        flowerRampRight.setPosition(servoPosition);
+    }
+
+    public void setLeftFlowerRampPosition(double servoPosition){
+        flowerRampLeft.setPosition(servoPosition);
     }
 
     public double getLeftServoPosition(){

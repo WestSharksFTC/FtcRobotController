@@ -87,6 +87,18 @@ public class TheWhiteDuckTeste extends OpMode {
             intake.downFlowerRamp();
         }
 
+        if(gamepad2.dpadDownWasPressed()){
+            intake.setLeftFlowerRampPosition(intake.getLeftServoPosition() - 0.05);
+        }else if(gamepad2.dpadUpWasPressed()){
+            intake.setLeftFlowerRampPosition(intake.getLeftServoPosition() + 0.05);
+        }
+
+        if(gamepad2.aWasPressed()){
+            intake.setRightFlowerRampPosition(intake.getRightServoPosition() - 0.05);
+        }else if(gamepad2.yWasPressed()){
+            intake.setRightFlowerRampPosition(intake.getRightServoPosition() + 0.05);
+        }
+
         // Indexer
         if(gamepad1.yWasPressed()) {
             indexerStatus = !indexerStatus;
