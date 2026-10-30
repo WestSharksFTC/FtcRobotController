@@ -1,5 +1,10 @@
 package org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.subsystems;
 
+import com.pedropathing.api.Paths;
+import com.pedropathing.api.PoseFactory;
+import com.pedropathing.follower.Follower;
+import com.pedropathing.math.Pose;
+import com.pedropathing.paths.Path;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -7,6 +12,7 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
+import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 public class WDChassis {
     // Motores
@@ -15,7 +21,13 @@ public class WDChassis {
     // IMU
     public IMU imu;
 
+    public Follower follower;
+    private final PoseFactory poseFactory = PoseFactory.degrees();
+    private final Pose parkPosition = poseFactory.of(10, 95, 90);
+
     public void init(HardwareMap hardwareMap){
+        follower = Constants.create(hardwareMap);
+
         // Motores
         frontLeftMotor = hardwareMap.get(DcMotor.class, "lf");
         backLeftMotor = hardwareMap.get(DcMotor.class, "lb");
@@ -89,5 +101,10 @@ public class WDChassis {
 
     public void resetYaw() {
         imu.resetYaw();
+    }
+
+    public Path parkPosTeleOp() {
+        Pose currentPose = follower.pose();
+        return Paths.line(currentPose, parkPosition).linear(currentPose, parkPosition);
     }
 }

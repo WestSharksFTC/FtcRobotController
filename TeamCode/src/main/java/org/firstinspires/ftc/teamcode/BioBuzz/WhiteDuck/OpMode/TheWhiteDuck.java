@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck;
+package org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.OpMode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;

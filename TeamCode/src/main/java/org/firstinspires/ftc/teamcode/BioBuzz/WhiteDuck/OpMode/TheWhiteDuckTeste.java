@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck;
+package org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.OpMode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -14,7 +14,7 @@ public class TheWhiteDuckTeste extends OpMode {
     WDIndexer indexer = new WDIndexer();
     WDOuttake outtake = new WDOuttake();
     double drive, strafe, turn, intakePower, indexerPower, outtakeVelocity;
-    boolean driveMode, intakeStatus, indexerStatus, outtakeStatus;
+    boolean driveMode, intakeStatus, indexerStatus, outtakeStatus, isParking;
 
     @Override
     public void init() {
@@ -28,24 +28,43 @@ public class TheWhiteDuckTeste extends OpMode {
 
     @Override
     public void loop() {
-        drive = gamepad1.left_stick_y;
-        strafe = gamepad1.left_stick_x;
-        turn = gamepad1.right_stick_x;
+        chassis.follower.update();
 
-        // Reset angle
-        if(gamepad1.leftStickButtonWasPressed()){
-            chassis.resetYaw();
+        // Se apertar o botão 'A', alterna o estado de parking
+        if (gamepad1.aWasPressed()) {
+            isParking = !isParking;
+
+            if (isParking) {
+                // INICIA O PARK: Manda o robô seguir para o destino
+                chassis.follower.follow(chassis.parkPosTeleOp());
+            } else {
+                // BOTÃO DE PÂNICO / CANCELAR: Para o robô na hora e devolve o controle
+                chassis.follower.stop();
+            }
         }
 
-        // Drive mode
-        if(gamepad1.rightStickButtonWasPressed()) {
-            driveMode = !driveMode;
-        }
+        // Se NÃO estiver estacionando, o piloto tem o controle manual total do robô
+        if (!isParking) {
+            // --- CONTROLE MANUAL NORMAL DO TELEOP ---
+            drive = gamepad1.left_stick_y;
+            strafe = gamepad1.left_stick_x;
+            turn = gamepad1.right_stick_x;
 
-        if(driveMode){
-            chassis.driveFieldRelative(drive, strafe, turn);
-        }else{
-            chassis.drive(drive, strafe, turn);
+            // Reset angle
+            if(gamepad1.leftStickButtonWasPressed()){
+                chassis.resetYaw();
+            }
+
+            // Drive mode
+            if(gamepad1.rightStickButtonWasPressed()) {
+                driveMode = !driveMode;
+            }
+
+            if(driveMode){
+                chassis.driveFieldRelative(drive, strafe, turn);
+            }else{
+                chassis.drive(drive, strafe, turn);
+            }
         }
 
         // Intake
@@ -110,5 +129,6 @@ public class TheWhiteDuckTeste extends OpMode {
         telemetry.addData("Servo Right Position", intake.getRightServoPosition());
         telemetry.addData("Servo Left Position", intake.getLeftServoPosition());
         telemetry.addData("Outtake Velocity", outtake.getVelocity());
+        telemetry.addData("Battery Voltage", outtake.getBatteryVoltage());
     }
 }
