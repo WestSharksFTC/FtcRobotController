@@ -10,41 +10,72 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 public class WDIndexer {
     public DcMotor indexer;
     public Servo pollenLimiter;
-    public DistanceSensor pollenSensor;
+    public DistanceSensor pollenSensorLeft;
+    public DistanceSensor pollenSensorRight;
 
-    public void init(HardwareMap hardwareMap){
-        // Motor
+    // Limite em cm para considerar que a peça está cobrindo o sensor
+    private static final double DETECTION_THRESHOLD_CM = 3.0;
+
+    public void init(HardwareMap hardwareMap) {
+        // Mapeamento do motor, servo e sensores
         indexer = hardwareMap.get(DcMotor.class, "indexer");
         pollenLimiter = hardwareMap.get(Servo.class, "pollenLimiter");
-        pollenSensor = hardwareMap.get(DistanceSensor.class, "pollenSensor");
+        pollenSensorLeft = hardwareMap.get(DistanceSensor.class, "pollenSensorLeft");
+        pollenSensorRight = hardwareMap.get(DistanceSensor.class, "pollenSensorRight");
 
+        // Direções
         indexer.setDirection(DcMotor.Direction.REVERSE);
         pollenLimiter.setDirection(Servo.Direction.FORWARD);
 
+        // Configurações do Motor para não utilizar o encoder e deixar o freio inativo
         indexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
         indexer.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
 
+        // Limite físico do servo
         pollenLimiter.scaleRange(0.05, 0.3);
     }
 
-    public void setPower(double power){
-        indexer.setPower(power);
+    // Ações claras para o Motor do Indexer
+    public void feed() {
+        indexer.setPower(0.75);
     }
 
-    public void openServo(){
+    public void reverse() {
+        indexer.setPower(-0.25);
+    }
+
+    public void stop() {
+        indexer.setPower(0.0);
+    }
+
+    // Controle Lógico do Servo
+    public void openServo() {
         pollenLimiter.setPosition(0.0);
     }
 
-    public void closeServo(){
+    public void closeServo() {
         pollenLimiter.setPosition(1.0);
     }
 
-    public String isClosed(){
-        return pollenLimiter.getPosition() == 1.0 ? "CLOSED" : "OPENED";
+    // Verificação segura do estado do servo
+    public boolean isClosed() {
+        return pollenLimiter.getPosition() >= 0.25;
     }
 
-    public double getDistanceCM() {
-        return pollenSensor.getDistance(DistanceUnit.CM);
+    // Leitura individual dos sensores de distância em CM
+    public double getDistanceLeftCM() {
+        return pollenSensorLeft.getDistance(DistanceUnit.CM);
+    }
+
+    public double getDistanceRightCM() {
+        return pollenSensorRight.getDistance(DistanceUnit.CM);
+    }
+
+    // Verificação unificada: se qualquer um dos lados detectar a peça a <= 3cm, retorna true
+    public boolean hasPollen() {
+        boolean leftDetected = getDistanceLeftCM() <= DETECTION_THRESHOLD_CM;
+        boolean rightDetected = getDistanceRightCM() <= DETECTION_THRESHOLD_CM;
+
+        return leftDetected || rightDetected;
     }
 }

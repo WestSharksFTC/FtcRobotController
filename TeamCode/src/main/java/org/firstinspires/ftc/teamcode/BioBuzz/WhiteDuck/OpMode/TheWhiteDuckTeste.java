@@ -6,6 +6,7 @@ import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.subsystems.WDChassis;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.subsystems.WDIndexer;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.subsystems.WDIntake;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.subsystems.WDOuttake;
+import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.subsystems.WDTurret;
 
 @TeleOp(name = "WhiteDuck Teste", group = "WhiteDuck")
 public class TheWhiteDuckTeste extends OpMode {
@@ -13,8 +14,9 @@ public class TheWhiteDuckTeste extends OpMode {
     WDIntake intake = new WDIntake();
     WDIndexer indexer = new WDIndexer();
     WDOuttake outtake = new WDOuttake();
-    double drive, strafe, turn, intakePower, indexerPower, outtakeVelocity;
-    boolean driveMode, intakeStatus, indexerStatus, outtakeStatus, isParking;
+    WDTurret turret = new WDTurret();
+    double drive, strafe, turn, turretPowerRight, turretPowerLeft;
+    boolean driveMode, intakeStatus, indexerStatus, outtakeStatus, turretStatus, isParking;
 
     @Override
     public void init() {
@@ -22,16 +24,18 @@ public class TheWhiteDuckTeste extends OpMode {
         intake.init(hardwareMap);
         indexer.init(hardwareMap);
         outtake.init(hardwareMap);
+        turret.init(hardwareMap);
 
         intake.upFlowerRamp();
     }
 
     @Override
     public void loop() {
+        // ========== CONTROLE DO CHASSIS & PARKING ==========
         chassis.follower.update();
 
         // Se apertar o botão 'A', alterna o estado de parking
-        if (gamepad1.aWasPressed()) {
+        if (gamepad1.backWasPressed()) {
             isParking = !isParking;
 
             if (isParking) {
@@ -67,50 +71,38 @@ public class TheWhiteDuckTeste extends OpMode {
             }
         }
 
+
+        // ========== CONTROLE DO INTAKE ==========
         // Intake
         if(gamepad1.xWasPressed()) {
             intakeStatus = !intakeStatus;
         }
 
         if(intakeStatus){
-            intakePower = 0.8;
+            intake.feed();
         }else{
-            intakePower = 0.0;
+            intake.stop();
         }
 
-        intake.setPower(intakePower);
-
         // Servo da rampa da flower
-        if(gamepad1.dpadUpWasPressed()){
+        if(gamepad2.dpadUpWasPressed()){
             intake.upFlowerRamp();
-        }else if(gamepad1.dpadDownWasPressed()){
+        }else if(gamepad2.dpadDownWasPressed()){
             intake.downFlowerRamp();
         }
 
-        if(gamepad2.dpadDownWasPressed()){
-            intake.setLeftFlowerRampPosition(intake.getLeftServoPosition() - 0.05);
-        }else if(gamepad2.dpadUpWasPressed()){
-            intake.setLeftFlowerRampPosition(intake.getLeftServoPosition() + 0.05);
-        }
 
-        if(gamepad2.aWasPressed()){
-            intake.setRightFlowerRampPosition(intake.getRightServoPosition() - 0.05);
-        }else if(gamepad2.yWasPressed()){
-            intake.setRightFlowerRampPosition(intake.getRightServoPosition() + 0.05);
-        }
-
+        // ========== CONTROLE DO INDEXER ==========
         // Indexer
         if(gamepad1.yWasPressed()) {
             indexerStatus = !indexerStatus;
         }
 
         if(indexerStatus){
-            indexerPower = 1.0;
+            indexer.feed();
         }else{
-            indexerPower = 0.0;
+            indexer.stop();
         }
-
-        indexer.setPower(indexerPower);
 
         // Servo do indexer
         if(gamepad1.rightBumperWasPressed()){
@@ -119,28 +111,67 @@ public class TheWhiteDuckTeste extends OpMode {
             indexer.openServo();
         }
 
+
+        // ========== CONTROLE DO OUTTAKE & TURRET ==========
         // Outtake
         if(gamepad1.bWasPressed()) {
             outtakeStatus = !outtakeStatus;
         }
 
         if(outtakeStatus){
-            outtakeVelocity = 760.0;
+            // O outtake calcula a velocidade dinamicamente com base no ty da Limelight
+            double currentTy = turret.getTy();
+            outtake.setVelocityFromLimelight(currentTy);
         }else{
-            outtakeVelocity = 0.0;
+            outtake.stop();
         }
 
-        outtake.setVelocity(outtakeVelocity);
+        // Turret
+        turretPowerRight = gamepad1.right_trigger;
+        turretPowerLeft = -gamepad1.left_trigger;
+
+        if(gamepad1.aWasPressed()) {
+            turretStatus = !turretStatus;
+        }
+
+        if(turretStatus){
+            turret.autoAim();
+        }else{
+            turret.setPower(turretPowerLeft + turretPowerRight);
+        }
 
 
-        telemetry.addData("Angulo", chassis.getImuYaw());
-        telemetry.addData("Drive Mode", driveMode ? "FIELD Oriented Drive" : "ROBOT Oriented Drive");
-        telemetry.addData("Intake Power", intakePower);
-        telemetry.addData("Indexer Power", indexerPower);
-        telemetry.addData("Pollen Gate", indexer.isClosed());
-        telemetry.addData("Servo Right Position", intake.getRightServoPosition());
-        telemetry.addData("Servo Left Position", intake.getLeftServoPosition());
-        telemetry.addData("Outtake Velocity", outtake.getVelocity());
-        telemetry.addData("Battery Voltage", outtake.getBatteryVoltage());
+        // ========== TELEMETRIA SEPARADA POR SUBSISTEMAS ==========
+        telemetry.addLine("========== CHASSIS ==========");
+        telemetry.addData("Yaw (Angulo)", chassis.getImuYaw());
+        telemetry.addData("Drive Mode", driveMode ? "Field Oriented" : "Robot Oriented");
+        telemetry.addData("Parking State", isParking ? "Ativo (Indo para o Park)" : "Desligado");
+        telemetry.addLine();
+
+        telemetry.addLine("========== INTAKE ==========");
+        telemetry.addData("Intake Status", intakeStatus ? "Ligado" : "Desligado");
+        telemetry.addData("Servo Rampa Left", intake.getLeftServoPosition());
+        telemetry.addData("Servo Rampa Right", intake.getRightServoPosition());
+        telemetry.addLine();
+
+        telemetry.addLine("========== INDEXER ==========");
+        telemetry.addData("Indexer Status", indexerStatus ? "Ligado" : "Desligado");
+        telemetry.addData("Distância Sensor da Esquerda (CM)", indexer.getDistanceLeftCM());
+        telemetry.addData("Distância Sensor da Direita (CM)", indexer.getDistanceRightCM());
+        telemetry.addData("Pollen Gate (Servo)", indexer.isClosed() ? "Fechado" : "Aberto");
+        telemetry.addLine();
+
+        telemetry.addLine("========== OUTTAKE ==========");
+        telemetry.addData("Outtake Status", outtakeStatus ? "Ligado (Auto Velocity)" : "Desligado");
+        telemetry.addData("Outtake Velocity (ticks/seg)", outtake.getVelocity());
+        telemetry.addData("Battery Voltage (V)", outtake.getBatteryVoltage());
+        telemetry.addLine();
+
+        telemetry.addLine("========== TURRET & LIMELIGHT ==========");
+        telemetry.addData("Turret Mode", turretStatus ? "Auto-Aim" : "Manual");
+        telemetry.addData("Limelight Tx", turret.getTx());
+        telemetry.addData("Limelight Ty", turret.getTy());
+
+        telemetry.update();
     }
 }

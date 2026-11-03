@@ -8,6 +8,7 @@ import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.subsystems.WDChassis;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.subsystems.WDIndexer;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.subsystems.WDIntake;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.subsystems.WDOuttake;
+import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.subsystems.WDTurret;
 
 @TeleOp(name = "WhiteDuck Completo", group = "WhiteDuck")
 public class TheWhiteDuck extends OpMode {
@@ -15,17 +16,19 @@ public class TheWhiteDuck extends OpMode {
     WDIntake intake = new WDIntake();
     WDIndexer indexer = new WDIndexer();
     WDOuttake outtake = new WDOuttake();
-    boolean driveMode;
+    WDTurret turret = new WDTurret();
 
+    boolean driveMode, isParking;
+
+    // Máquina de estados sem o IDLE (robot opera de forma contínua focada em coletar e atirar)
     public enum RobotState {
-        IDLE,
         INTAKING,
         HOLDING,
         SHOOTING_SPINUP,
         SHOOTING_FIRE
     }
 
-    private RobotState currentState = RobotState.IDLE;
+    private RobotState currentState = RobotState.INTAKING;
     private int pollenCount = 0;
     private boolean previousSensorState = false;
     private ElapsedTime shootTimer = new ElapsedTime();
@@ -36,108 +39,155 @@ public class TheWhiteDuck extends OpMode {
         intake.init(hardwareMap);
         indexer.init(hardwareMap);
         outtake.init(hardwareMap);
+        turret.init(hardwareMap);
 
+        chassis.resetYaw();
         intake.upFlowerRamp();
     }
 
     @Override
     public void loop() {
-        // Chassis
-        double drive = gamepad1.left_stick_y;
-        double strafe = gamepad1.left_stick_x;
-        double turn = gamepad1.right_stick_x;
+        // ========== CONTROLE DO CHASSIS & PARKING ==========
+        chassis.follower.update();
 
-        if (gamepad1.leftStickButtonWasPressed()) chassis.resetYaw();
-        if (gamepad1.rightStickButtonWasPressed()) driveMode = !driveMode;
+        // Se apertar o botão 'Back', alterna o estado de parking
+        if (gamepad1.backWasPressed()) {
+            isParking = !isParking;
 
-        if (driveMode) {
-            chassis.driveFieldRelative(drive, strafe, turn);
-        } else {
-            chassis.drive(drive, strafe, turn);
+            if (isParking) {
+                // INICIA O PARK: Manda o robô seguir para o destino
+                chassis.follower.follow(chassis.parkPosTeleOp());
+            } else {
+                // BOTÃO DE PÂNICO / CANCELAR: Para o robô na hora e devolve o controle
+                chassis.follower.stop();
+            }
         }
 
-        // Servo da rampa da flower
-        if(gamepad1.dpadUpWasPressed()){
+        // Se NÃO estiver estacionando, o piloto tem o controle manual total do robô
+        if (!isParking) {
+            // --- CONTROLE MANUAL NORMAL DO TELEOP ---
+            double drive = gamepad1.left_stick_y;
+            double strafe = gamepad1.left_stick_x;
+            double turn = gamepad1.right_stick_x;
+
+            // Reset angle
+            if(gamepad1.leftStickButtonWasPressed()){
+                chassis.resetYaw();
+            }
+
+            // Drive mode
+            if(gamepad1.rightStickButtonWasPressed()) {
+                driveMode = !driveMode;
+            }
+
+            if(driveMode){
+                chassis.driveFieldRelative(drive, strafe, turn);
+            }else{
+                chassis.drive(drive, strafe, turn);
+            }
+        }
+
+        // ========== 2. CONTROLE MANUAL DA RAMPA DA FLOWER ==========
+        if (gamepad1.dpadUpWasPressed()) {
             intake.upFlowerRamp();
-        }else if(gamepad1.dpadDownWasPressed()){
+        } else if (gamepad1.dpadDownWasPressed()) {
             intake.downFlowerRamp();
         }
 
-        // State machine para coleta e disparo
+
+        // ========== 3. MÁQUINA DE ESTADOS (COLETA E DISPARO AUTOMATIZADOS) ==========
+        // A turret faz a mira automática e escape inteligente de limite via Limelight
+        turret.autoAim();
+
         switch (currentState) {
-            case IDLE:
-                intake.setPower(0.0);
-                indexer.setPower(0.0);
-                outtake.setVelocity(0.0);
-                indexer.closeServo();
-                pollenCount = 0;
-
-                // Inicia o ciclo
-                if (gamepad1.xWasPressed()) {
-                    currentState = RobotState.INTAKING;
-                }
-                break;
-
             case INTAKING:
                 indexer.closeServo();
-                outtake.setVelocity(0.0);
-                intake.setPower(0.8);
-                indexer.setPower(0.8);
+                outtake.stop();
+                intake.feed();      // Usa o método padrão do intake
+                indexer.feed();     // Puxa os pollens para dentro
 
-                boolean currentSensorState = (indexer.getDistanceCM() < 4.0);
+                // Detecta a contagem de pollens pelo sensor do indexer (< 3cm conforme especificações)
+                boolean currentSensorState = indexer.hasPollen();
 
                 if (currentSensorState && !previousSensorState) {
                     pollenCount++;
                 }
                 previousSensorState = currentSensorState;
 
+                // Se atingiu a capacidade máxima, vai para o estado de espera segurando a peça
                 if (pollenCount >= 4) {
                     currentState = RobotState.HOLDING;
                 }
 
-                // OPCIONAL: Botão para o shoot de forma manual
-                if (gamepad1.yWasPressed()) {
+                // Se o piloto apertar 'B' a qualquer momento, vai para o spinup do tiro
+                if (gamepad1.bWasPressed()) {
                     currentState = RobotState.SHOOTING_SPINUP;
                 }
                 break;
 
             case HOLDING:
-                indexer.setPower(0.0);
-                intake.setPower(-0.2);
+                indexer.stop();
+                intake.reverse(); // Segura os pollens sob leve pressão contrária
 
-                // Botão para iniciar o shoot
-                if (gamepad1.yWasPressed()) {
+                // Aperta 'B' para iniciar a sequência de tiro
+                if (gamepad1.bWasPressed()) {
                     currentState = RobotState.SHOOTING_SPINUP;
                 }
                 break;
 
             case SHOOTING_SPINUP:
-                intake.setPower(-0.2);
-                indexer.setPower(0.0);
-                outtake.setVelocity(760.0);
+                intake.reverse();
+                indexer.stop();
 
-                if (Math.abs(outtake.getVelocity() - 760.0) < 25.0) {
-                    shootTimer.reset(); // Reseta um cronômetro para o tempo de disparo
+                // O outtake calcula a velocidade dinamicamente com base no 'ty' da Limelight
+                double currentTy = turret.getTy();
+                outtake.setVelocityFromLimelight(currentTy);
+
+                // Quando a roda do outtake atingir a velocidade ideal calculada, dispara
+                if (Math.abs(outtake.getVelocity() - outtake.getTargetVelocity()) < 10.0) {
+                    shootTimer.reset();
                     currentState = RobotState.SHOOTING_FIRE;
                 }
                 break;
 
             case SHOOTING_FIRE:
-                indexer.openServo();
-                indexer.setPower(1.0);
+                intake.reverse();
+                indexer.openServo(); // Abre o portão do pollen
+                indexer.feed();      // Joga para fora
 
+                // Mantém o outtake rodando durante o despejo
+                outtake.setVelocityFromLimelight(turret.getTy());
+
+                // Tempo de duração do disparo (3 segundos para esvaziar)
                 if (shootTimer.seconds() > 3.0) {
-                    pollenCount = 0;
-                    currentState = RobotState.INTAKING;
+                    pollenCount = 0;              // Reseta a contagem
+                    indexer.closeServo();         // Fecha o portão novamente
+                    currentState = RobotState.INTAKING; // Retorna direto para a coleta
                 }
                 break;
         }
 
+
+        // ========== 4. TELEMETRIA POR SUBSISTEMAS ==========
+        telemetry.addData("--- MÁQUINA DE ESTADOS ---", "");
         telemetry.addData("Estado do Robô", currentState);
         telemetry.addData("Contagem de Pollens", pollenCount);
-        telemetry.addData("Distância Sensor (CM)", indexer.getDistanceCM());
+
+        telemetry.addData("--- CHASSIS ---", "");
+        telemetry.addData("Drive Mode", driveMode ? "Field Oriented" : "Robot Oriented");
+        telemetry.addData("Yaw (Angulo)", chassis.getImuYaw());
+
+        telemetry.addData("--- INTAKE & INDEXER ---", "");
+        telemetry.addData("Distância Sensor da Esquerda (CM)", indexer.getDistanceLeftCM());
+        telemetry.addData("Distância Sensor da Direita (CM)", indexer.getDistanceRightCM());
+        telemetry.addData("Portão Indexer", indexer.isClosed() ? "Fechado" : "Aberto");
+
+        telemetry.addData("--- OUTTAKE & TURRET ---", "");
+        telemetry.addData("Limelight Tx", turret.getTx());
+        telemetry.addData("Limelight Ty", turret.getTy());
         telemetry.addData("Outtake Velocity", outtake.getVelocity());
-        telemetry.addData("Outtake Timer", shootTimer);
+        telemetry.addData("Battery Voltage", outtake.getBatteryVoltage());
+
         telemetry.update();
     }
 }

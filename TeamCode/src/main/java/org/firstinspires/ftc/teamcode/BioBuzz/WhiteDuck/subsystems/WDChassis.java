@@ -7,7 +7,6 @@ import com.pedropathing.math.Pose;
 import com.pedropathing.paths.Path;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 
@@ -23,33 +22,40 @@ public class WDChassis {
 
     public Follower follower;
     private final PoseFactory poseFactory = PoseFactory.degrees();
-    private final Pose parkPosition = poseFactory.of(10, 95, 90);
+    private final Pose parkPosition = poseFactory.of(10, 95, 0);
 
-    public void init(HardwareMap hardwareMap){
+    // Limite de velocidade global
+    private static final double MAX_SPEED = 0.8;
+
+    public void init(HardwareMap hardwareMap) {
+        // Inicializa o Follower do Pedro Pathing
         follower = Constants.create(hardwareMap);
 
-        // Motores
+        // Mapeamento dos motores
         frontLeftMotor = hardwareMap.get(DcMotor.class, "lf");
         backLeftMotor = hardwareMap.get(DcMotor.class, "lb");
         frontRightMotor = hardwareMap.get(DcMotor.class, "rf");
         backRightMotor = hardwareMap.get(DcMotor.class, "rb");
 
+        // Direções dos motores
         frontLeftMotor.setDirection(DcMotor.Direction.REVERSE);
         backLeftMotor.setDirection(DcMotor.Direction.FORWARD);
-        frontRightMotor.setDirection(DcMotorSimple.Direction.FORWARD);
-        backRightMotor.setDirection(DcMotorSimple.Direction.REVERSE);
+        frontRightMotor.setDirection(DcMotor.Direction.FORWARD);
+        backRightMotor.setDirection(DcMotor.Direction.REVERSE);
 
+        // Sem encoders para o controle manual dos motores
         frontLeftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         backLeftMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         frontRightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         backRightMotor.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
 
+        // Frenagem ativa dos motores
         frontLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backLeftMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         frontRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backRightMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
-        // IMU
+        // Configurações da IMU
         imu = hardwareMap.get(IMU.class, "imu");
 
         RevHubOrientationOnRobot RevOrientation = new RevHubOrientationOnRobot(
@@ -60,32 +66,33 @@ public class WDChassis {
         imu.initialize(new IMU.Parameters(RevOrientation));
     }
 
-    //Controle básico do chassis (robot-centric)
-    public void drive(double forward, double strafe, double rotate){
+    // Controle básico do chassis (robot-centric)
+    public void drive(double forward, double strafe, double rotate) {
+        // Equações padrão das rodas Mecanum
+        double frontLeftPower  = forward - strafe - rotate;
+        double backLeftPower   = forward + strafe - rotate;
         double frontRightPower = forward + strafe + rotate;
-        double backRightPower = forward + strafe - rotate;
-        double frontLeftPower = forward - strafe - rotate;
-        double backLeftPower = forward - strafe + rotate;
+        double backRightPower  = forward - strafe + rotate;
 
-        double maxPower = 1.0;
-        double maxSpeed = 0.8;
+        // Encontra a maior potência absoluta para normalizar se passar de 1.0
+        double max = Math.max(1.0, Math.max(
+                Math.max(Math.abs(frontLeftPower), Math.abs(backLeftPower)),
+                Math.max(Math.abs(frontRightPower), Math.abs(backRightPower))
+        ));
 
-        maxPower = Math.max(maxPower, Math.abs(frontLeftPower));
-        maxPower = Math.max(maxPower, Math.abs(backLeftPower));
-        maxPower = Math.max(maxPower, Math.abs(frontRightPower));
-        maxPower = Math.max(maxPower, Math.abs(backRightPower));
-
-        frontLeftMotor.setPower(maxSpeed * (frontLeftPower / maxPower));
-        backLeftMotor.setPower(maxSpeed * (backLeftPower / maxPower));
-        frontRightMotor.setPower(maxSpeed * (frontRightPower / maxPower));
-        backRightMotor.setPower(maxSpeed * (backRightPower / maxPower));
+        // Aplica a normalização e limita pela velocidade máxima desejada
+        frontLeftMotor.setPower((frontLeftPower / max) * MAX_SPEED);
+        backLeftMotor.setPower((backLeftPower / max) * MAX_SPEED);
+        frontRightMotor.setPower((frontRightPower / max) * MAX_SPEED);
+        backRightMotor.setPower((backRightPower / max) * MAX_SPEED);
     }
 
-    //Controle field-centric (relativo ao campo)
-    public void driveFieldRelative(double forward, double strafe, double rotate){
+    // Controle do chassis relativo ao campo (field-centric)
+    public void driveFieldRelative(double forward, double strafe, double rotate) {
         double theta = Math.atan2(strafe, forward);
         double r = Math.hypot(strafe, forward);
 
+        // Subtrai a orientação atual da IMU do ângulo de deslocamento
         theta = AngleUnit.normalizeRadians(theta - imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS));
 
         double newForward = r * Math.cos(theta);
@@ -94,7 +101,7 @@ public class WDChassis {
         this.drive(newForward, newStrafe, rotate);
     }
 
-    //Retorna ângulo da IMU (para field-centric)
+    // Retorna o ângulo da IMU em graus
     public double getImuYaw() {
         return imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.DEGREES);
     }

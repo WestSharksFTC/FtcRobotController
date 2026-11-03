@@ -14,6 +14,7 @@ import com.pedropathing.ivy.Scheduler;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.subsystems.WDIndexer;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.subsystems.WDIntake;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.subsystems.WDOuttake;
+import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.subsystems.WDTurret;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import static com.pedropathing.ivy.Scheduler.schedule;
@@ -33,6 +34,7 @@ public class AutonomousComplete extends LinearOpMode {
     WDIntake intake = new WDIntake();
     WDIndexer indexer = new WDIndexer();
     WDOuttake outtake = new WDOuttake();
+    WDTurret turret = new WDTurret();
 
     private final PoseFactory poseFactory = PoseFactory.degrees();
 
@@ -49,7 +51,7 @@ public class AutonomousComplete extends LinearOpMode {
     private final Pose collectFlowerPos22 = poseFactory.of(16, 47, 180);
     private final Pose shootPos4 = poseFactory.of(56, 8, 180);
     private final Pose parkPosStart = poseFactory.of(56, 8, 180);
-    private final Pose parkPos = poseFactory.of(10, 95, 90);
+    private final Pose parkPos = poseFactory.of(10, 95, 0);
 
     public Path collectGardenPos() {
         return Paths.line(start, collectGardenPos).linear(start, collectGardenPos);
@@ -83,13 +85,21 @@ public class AutonomousComplete extends LinearOpMode {
         return Paths.line(parkPosStart, parkPos).linear(parkPosStart, parkPos);
     }
 
-    // Métodos auxiliares para transformar ações dos subsistemas em Commands do Ivy
-    public Command runOuttakeVelocity(double velocity) {
-        return instant(() -> outtake.setVelocity(velocity));
+    // --- Comandos Auxiliares ---
+    public Command runOuttakeDynamic() {
+        return instant(() -> outtake.setVelocityFromLimelight(turret.getTy()));
     }
 
-    public Command runIndexerPower(double power) {
-        return instant(() -> indexer.setPower(power));
+    public Command stopOuttake() {
+        return instant(() -> outtake.stop());
+    }
+
+    public Command runIndexerFeed() {
+        return instant(() -> indexer.feed());
+    }
+
+    public Command stopIndexer() {
+        return instant(() -> indexer.stop());
     }
 
     public Command openIndexerServo() {
@@ -100,8 +110,16 @@ public class AutonomousComplete extends LinearOpMode {
         return instant(() -> indexer.closeServo());
     }
 
-    public Command runIntakePower(double power) {
-        return instant(() -> intake.setPower(power));
+    public Command runIntakeFeed() {
+        return instant(() -> intake.feed());
+    }
+
+    public Command runIntakeReverse() {
+        return instant(() -> intake.reverse());
+    }
+
+    public Command stopIntake() {
+        return instant(() -> intake.stop());
     }
 
     public Command setFlowerRampUp(boolean up) {
@@ -111,64 +129,71 @@ public class AutonomousComplete extends LinearOpMode {
         });
     }
 
-    // A rotina completa organizada usando o Ivy (Sequential / Parallel)
+    // Rotina autônoma completa com outtake dinâmico ajustado pela Limelight
     public Command autoRoutine() {
         return sequential(
-                runOuttakeVelocity(760),
+                runOuttakeDynamic(), // Liga o outtake dinâmico baseado na Limelight
                 waitMs(3000),
                 openIndexerServo(),
-                runIndexerPower(1.0),
+                runIndexerFeed(),
                 waitMs(1000),
                 closeIndexerServo(),
-                runIntakePower(0.8),
-                runIndexerPower(0.8),
+                stopOuttake(),
+                runIntakeFeed(),
+                runIndexerFeed(),
 
                 follow(follower, collectGardenPos()),
                 waitMs(2000),
-                runIndexerPower(0.0),
-                runIntakePower(-0.5),
+                stopIndexer(),
+                runIntakeReverse(),
 
                 follow(follower, shootPos2()),
+                runOuttakeDynamic(), // Atualiza velocidade pelo ty da Limelight na posição 2
                 waitMs(2000),
                 openIndexerServo(),
-                runIndexerPower(1.0),
+                runIndexerFeed(),
                 waitMs(1000),
                 closeIndexerServo(),
-                runIntakePower(0.8),
-                runIndexerPower(0.8),
-                setFlowerRampUp(false), // descer rampa
+                stopOuttake(),
+                runIntakeFeed(),
+                runIndexerFeed(),
+                setFlowerRampUp(false),
 
                 follow(follower, collectFlowerPos1()),
                 waitMs(2000),
-                runIndexerPower(0.0),
-                runIntakePower(-0.5),
+                stopIndexer(),
+                runIntakeReverse(),
 
                 follow(follower, shootPos3()),
+                runOuttakeDynamic(),
                 waitMs(2000),
                 openIndexerServo(),
-                runIndexerPower(1.0),
+                runIndexerFeed(),
                 waitMs(1000),
                 closeIndexerServo(),
-                runIntakePower(0.8),
-                runIndexerPower(0.8),
+                stopOuttake(),
+                runIntakeFeed(),
+                runIndexerFeed(),
 
                 follow(follower, collectFlowerPos21()),
                 follow(follower, collectFlowerPos22()),
                 waitMs(2000),
-                runIndexerPower(0.0),
-                runIntakePower(-0.5),
+                stopIndexer(),
+                runIntakeReverse(),
 
                 parallel(
                         follow(follower, shootPos4()),
-                        setFlowerRampUp(true) // subir rampa em paralelo com o movimento
+                        setFlowerRampUp(true)
                 ),
+                runOuttakeDynamic(),
                 waitMs(2000),
                 openIndexerServo(),
-                runIndexerPower(1.0),
+                runIndexerFeed(),
                 waitMs(1000),
                 closeIndexerServo(),
-                runIntakePower(0.0),
-                runIndexerPower(0.0),
+                stopOuttake(),
+                stopIntake(),
+                stopIndexer(),
 
                 follow(follower, parkPos())
         );
@@ -182,6 +207,7 @@ public class AutonomousComplete extends LinearOpMode {
         intake.init(hardwareMap);
         indexer.init(hardwareMap);
         outtake.init(hardwareMap);
+        turret.init(hardwareMap);
 
         follower.setPose(start);
         follower.update();
@@ -197,10 +223,14 @@ public class AutonomousComplete extends LinearOpMode {
             follower.update();
             Scheduler.execute();
 
+            turret.autoAim();
+
             telemetry.addData("x", follower.pose().x());
             telemetry.addData("y", follower.pose().y());
             telemetry.addData("heading", follower.pose().heading());
-            telemetry.addData("motor_velocity", follower.velocity());
+            telemetry.addData("Limelight Tx", turret.getTx());
+            telemetry.addData("Limelight Ty", turret.getTy());
+            telemetry.addData("Outtake Velocity", outtake.getVelocity());
             telemetry.update();
         }
     }
