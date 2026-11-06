@@ -50,7 +50,7 @@ public class TheWhiteDuckTeste extends OpMode {
         // Se NÃO estiver estacionando, o piloto tem o controle manual total do robô
         if (!isParking) {
             // --- CONTROLE MANUAL NORMAL DO TELEOP ---
-            drive = gamepad1.left_stick_y;
+            drive = -gamepad1.left_stick_y;
             strafe = gamepad1.left_stick_x;
             turn = gamepad1.right_stick_x;
 
@@ -74,7 +74,7 @@ public class TheWhiteDuckTeste extends OpMode {
 
         // ========== CONTROLE DO INTAKE ==========
         // Intake
-        if(gamepad1.xWasPressed()) {
+        if(gamepad2.xWasPressed()) {
             intakeStatus = !intakeStatus;
         }
 
@@ -83,6 +83,8 @@ public class TheWhiteDuckTeste extends OpMode {
         }else{
             intake.stop();
         }
+
+        intake.setPower(gamepad2.left_stick_y);
 
         // Servo da rampa da flower
         if(gamepad2.dpadUpWasPressed()){
@@ -94,27 +96,29 @@ public class TheWhiteDuckTeste extends OpMode {
 
         // ========== CONTROLE DO INDEXER ==========
         // Indexer
-        if(gamepad1.yWasPressed()) {
+        if(gamepad2.yWasPressed()) {
             indexerStatus = !indexerStatus;
         }
 
         if(indexerStatus){
             indexer.feed();
-        }else{
+        }else {
             indexer.stop();
         }
 
+        indexer.setPower(gamepad2.right_stick_y);
+
         // Servo do indexer
-        if(gamepad1.rightBumperWasPressed()){
+        if(gamepad2.rightBumperWasPressed()){
             indexer.closeServo();
-        }else if(gamepad1.leftBumperWasPressed()){
+        }else if(gamepad2.leftBumperWasPressed()){
             indexer.openServo();
         }
 
 
         // ========== CONTROLE DO OUTTAKE & TURRET ==========
         // Outtake
-        if(gamepad1.bWasPressed()) {
+        if(gamepad2.bWasPressed()) {
             outtakeStatus = !outtakeStatus;
         }
 
@@ -127,10 +131,10 @@ public class TheWhiteDuckTeste extends OpMode {
         }
 
         // Turret
-        turretPowerRight = gamepad1.right_trigger;
-        turretPowerLeft = -gamepad1.left_trigger;
+        turretPowerRight = gamepad2.right_trigger;
+        turretPowerLeft = -gamepad2.left_trigger;
 
-        if(gamepad1.aWasPressed()) {
+        if(gamepad2.aWasPressed()) {
             turretStatus = !turretStatus;
         }
 

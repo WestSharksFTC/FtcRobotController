@@ -5,12 +5,12 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-public class WDTurret {
+public class WDTurretBLUE {
     public DcMotorEx turretMotor;
     public Limelight3A limelight;
 
     // Cálculo exato considerando a redução interna (537.7) e externa (99/20)
-    private final double TICKS_PER_DEGREE = (537.7 * (99.0 / 20.0)) / 360.0; // ~7.3934 ticks por grau
+    private final double TICKS_PER_DEGREE = (537.7 * (104.0 / 25.0)) / 360.0; // ~7.3934 ticks por grau
     private final double MAX_DEGREES = 180.0;
     private final int MAX_TICKS = (int) (MAX_DEGREES * TICKS_PER_DEGREE);
 
@@ -25,10 +25,10 @@ public class WDTurret {
         turretMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
 
         turretMotor.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
-        turretMotor.setDirection(DcMotorEx.Direction.FORWARD);
+        turretMotor.setDirection(DcMotorEx.Direction.REVERSE);
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        limelight.pipelineSwitch(0);
+        limelight.pipelineSwitch(1);
         limelight.start();
     }
 
@@ -57,8 +57,8 @@ public class WDTurret {
 
             // Condição para encerrar a fuga: assim que a Limelight enxergar um resultado válido
             // E a torre já tiver recuado um pouco para fora do limite crítico, voltamos ao normal.
-            boolean safeFromRightLimit = (escapeDirection < 0 && currentPosition < MAX_TICKS - 150);
-            boolean safeFromLeftLimit  = (escapeDirection > 0 && currentPosition > -MAX_TICKS + 150);
+            boolean safeFromRightLimit = (escapeDirection < 0 && currentPosition < MAX_TICKS);
+            boolean safeFromLeftLimit  = (escapeDirection > 0 && currentPosition > -MAX_TICKS);
 
             if (result != null && result.isValid() && (safeFromRightLimit || safeFromLeftLimit)) {
                 isEscapingLimit = false; // Desativa a fuga e retoma o tracking normal
@@ -88,8 +88,8 @@ public class WDTurret {
             double power = tx * kP;
 
             // Limite de segurança na potência de tracking
-            if (power > 0.5) power = 0.5;
-            if (power < -0.5) power = -0.5;
+            if (power > 1.0) power = 1.0;
+            if (power < -1.0) power = -1.0;
 
             turretMotor.setPower(power);
         } else {
