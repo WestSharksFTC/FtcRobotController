@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.AutoSharks.Prompts;
+package org.firstinspires.ftc.teamcode.AutoSharks.Prompts;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 

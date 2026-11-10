@@ -1,9 +1,9 @@
-package org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.AutoSharks;
+package org.firstinspires.ftc.teamcode.AutoSharks;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.AutoSharks.Prompts.Prompt;
+import org.firstinspires.ftc.teamcode.AutoSharks.Prompts.Prompt;
 
 import java.util.ArrayList;
 import java.util.HashMap;
