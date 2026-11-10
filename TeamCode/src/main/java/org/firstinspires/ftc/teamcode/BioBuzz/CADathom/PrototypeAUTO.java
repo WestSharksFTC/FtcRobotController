@@ -16,11 +16,13 @@ import static com.pedropathing.ivy.groups.Groups.parallel; // Importante para ro
 import static com.pedropathing.ivy.pedro.PedroCommands.follow;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
 
+@Disabled
 @Autonomous(name = "Prototype Autonomous Complete", group = "Prototype Biobuzz")
 public class PrototypeAUTO extends LinearOpMode {
 

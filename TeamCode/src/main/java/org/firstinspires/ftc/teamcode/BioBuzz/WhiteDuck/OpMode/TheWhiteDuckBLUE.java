@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.OpMode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.subsystems.WDChassis;
@@ -8,8 +9,9 @@ import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.subsystems.WDIntake;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.subsystems.WDOuttake;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.subsystems.WDTurret;
 
-@TeleOp(name = "WhiteDuck Teste", group = "WhiteDuck")
-public class TheWhiteDuckTeste extends OpMode {
+@Disabled
+@TeleOp(name = "WhiteDuck AZUL", group = "WhiteDuck")
+public class TheWhiteDuckBLUE extends OpMode {
     WDChassis chassis = new WDChassis();
     WDIntake intake = new WDIntake();
     WDIndexer indexer = new WDIndexer();
@@ -24,7 +26,7 @@ public class TheWhiteDuckTeste extends OpMode {
         intake.init(hardwareMap);
         indexer.init(hardwareMap);
         outtake.init(hardwareMap);
-        turret.init(hardwareMap);
+        turret.init(hardwareMap, 1);
 
         intake.upFlowerRamp();
     }
@@ -109,9 +111,9 @@ public class TheWhiteDuckTeste extends OpMode {
         indexer.setPower(gamepad2.right_stick_y);
 
         // Servo do indexer
-        if(gamepad2.rightBumperWasPressed()){
+        if(gamepad2.dpadRightWasPressed()){
             indexer.closeServo();
-        }else if(gamepad2.leftBumperWasPressed()){
+        }else if(gamepad2.dpadLeftWasPressed()){
             indexer.openServo();
         }
 

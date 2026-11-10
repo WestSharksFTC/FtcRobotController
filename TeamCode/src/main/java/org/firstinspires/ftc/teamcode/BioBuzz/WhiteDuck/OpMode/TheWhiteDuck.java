@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.OpMode;
 
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.util.ElapsedTime;
@@ -10,6 +11,7 @@ import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.subsystems.WDIntake;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.subsystems.WDOuttake;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.subsystems.WDTurret;
 
+@Disabled
 @TeleOp(name = "WhiteDuck Completo", group = "WhiteDuck")
 public class TheWhiteDuck extends OpMode {
     WDChassis chassis = new WDChassis();
@@ -32,6 +34,7 @@ public class TheWhiteDuck extends OpMode {
     private int pollenCount = 0;
     private boolean previousSensorState = false;
     private ElapsedTime shootTimer = new ElapsedTime();
+    private int pipeline;
 
     @Override
     public void init() {
@@ -39,10 +42,25 @@ public class TheWhiteDuck extends OpMode {
         intake.init(hardwareMap);
         indexer.init(hardwareMap);
         outtake.init(hardwareMap);
-        turret.init(hardwareMap);
 
         chassis.resetYaw();
         intake.upFlowerRamp();
+    }
+
+    @Override
+    public void init_loop(){
+        if(gamepad2.dpadUpWasPressed()){
+            telemetry.addLine("> RED");
+            telemetry.addLine("BLUE");
+            pipeline = 0;
+            turret.init(hardwareMap, pipeline);
+        }else if(gamepad2.dpadDownWasPressed()){
+            telemetry.addLine("RED");
+            telemetry.addLine("> BLUE");
+            pipeline = 1;
+            turret.init(hardwareMap, pipeline);
+        }
+
     }
 
     @Override
@@ -66,7 +84,7 @@ public class TheWhiteDuck extends OpMode {
         // Se NÃO estiver estacionando, o piloto tem o controle manual total do robô
         if (!isParking) {
             // --- CONTROLE MANUAL NORMAL DO TELEOP ---
-            double drive = gamepad1.left_stick_y;
+            double drive = -gamepad1.left_stick_y;
             double strafe = gamepad1.left_stick_x;
             double turn = gamepad1.right_stick_x;
 
@@ -87,13 +105,17 @@ public class TheWhiteDuck extends OpMode {
             }
         }
 
-        // ========== 2. CONTROLE MANUAL DA RAMPA DA FLOWER ==========
-        if (gamepad1.dpadUpWasPressed()) {
+        // ========== 2.1. CONTROLE MANUAL DA RAMPA DA FLOWER ==========
+        if (gamepad2.dpadUpWasPressed()) {
             intake.upFlowerRamp();
-        } else if (gamepad1.dpadDownWasPressed()) {
+        } else if (gamepad2.dpadDownWasPressed()) {
             intake.downFlowerRamp();
         }
 
+        // ========== 2.2. CONTROLE MANUAL DO INTAKE E INDEXER ==========
+        intake.setPower(gamepad2.left_stick_y);
+
+        indexer.setPower(gamepad2.right_stick_y);
 
         // ========== 3. MÁQUINA DE ESTADOS (COLETA E DISPARO AUTOMATIZADOS) ==========
         // A turret faz a mira automática e escape inteligente de limite via Limelight
@@ -120,7 +142,7 @@ public class TheWhiteDuck extends OpMode {
                 }
 
                 // Se o piloto apertar 'B' a qualquer momento, vai para o spinup do tiro
-                if (gamepad1.bWasPressed()) {
+                if (gamepad2.bWasPressed()) {
                     currentState = RobotState.SHOOTING_SPINUP;
                 }
                 break;
@@ -130,7 +152,7 @@ public class TheWhiteDuck extends OpMode {
                 intake.reverse(); // Segura os pollens sob leve pressão contrária
 
                 // Aperta 'B' para iniciar a sequência de tiro
-                if (gamepad1.bWasPressed()) {
+                if (gamepad2.bWasPressed()) {
                     currentState = RobotState.SHOOTING_SPINUP;
                 }
                 break;

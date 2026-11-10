@@ -5,7 +5,7 @@ import com.qualcomm.hardware.limelightvision.Limelight3A;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-public class WDTurretBLUE {
+public class WDTurret {
     public DcMotorEx turretMotor;
     public Limelight3A limelight;
 
@@ -18,7 +18,7 @@ public class WDTurretBLUE {
     private boolean isEscapingLimit = false;
     private int escapeDirection = 0; // -1 para esquerda, 1 para direita
 
-    public void init(HardwareMap hardwareMap) {
+    public void init(HardwareMap hardwareMap, int pipeline) {
         turretMotor = hardwareMap.get(DcMotorEx.class, "turret");
 
         turretMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
@@ -28,7 +28,7 @@ public class WDTurretBLUE {
         turretMotor.setDirection(DcMotorEx.Direction.REVERSE);
 
         limelight = hardwareMap.get(Limelight3A.class, "limelight");
-        limelight.pipelineSwitch(1);
+        limelight.pipelineSwitch(pipeline); // 0 - VERMELHO e 1 - AZUL
         limelight.start();
     }
 
@@ -42,6 +42,19 @@ public class WDTurretBLUE {
             turretMotor.setPower(0.0);
         } else {
             turretMotor.setPower(power);
+        }
+    }
+
+    // Control da limelight para voltar para o centro
+    public void recentralize() {
+        int currentPosition = turretMotor.getCurrentPosition();
+
+        if (currentPosition > 10){
+            turretMotor.setPower(-0.2);
+        }else if(currentPosition < -10){
+            turretMotor.setPower(0.2);
+        }else{
+            turretMotor.setPower(0.0);
         }
     }
 
@@ -114,5 +127,10 @@ public class WDTurretBLUE {
             return result.getTy();
         }
         return 0.0;
+    }
+
+    // Retorn a posição da turret
+    public double getTurretPosition(){
+        return turretMotor.getCurrentPosition();
     }
 }

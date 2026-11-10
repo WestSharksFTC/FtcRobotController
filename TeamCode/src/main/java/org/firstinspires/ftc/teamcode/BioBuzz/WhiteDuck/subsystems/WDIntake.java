@@ -27,10 +27,13 @@ public class WDIntake {
 
         // Limites físicos dos servos da rampa
         flowerRampRight.scaleRange(0.050, 0.125);
-        flowerRampLeft.scaleRange(0.90, 0.975);
+        flowerRampLeft.scaleRange(0.875, 0.950);
     }
 
     // Ações do Motor do Intake
+    public void setPower(double power){
+        intake.setPower(power);
+    }
     public void feed() {
         intake.setPower(0.75);
     }

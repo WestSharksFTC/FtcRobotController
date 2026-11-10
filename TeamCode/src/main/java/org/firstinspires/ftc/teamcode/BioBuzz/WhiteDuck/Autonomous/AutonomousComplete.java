@@ -1,6 +1,5 @@
 package org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.Autonomous;
 
-import static com.pedropathing.api.Paths.*;
 import com.pedropathing.api.Paths;
 import com.pedropathing.api.PoseFactory;
 
@@ -24,8 +23,10 @@ import static com.pedropathing.ivy.groups.Groups.parallel;
 import static com.pedropathing.ivy.pedro.PedroCommands.follow;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+import com.qualcomm.robotcore.eventloop.opmode.Disabled;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
+@Disabled
 @Autonomous(name = "White Duck Autonomous Complete", group = "WhiteDuck")
 public class AutonomousComplete extends LinearOpMode {
 
@@ -40,15 +41,18 @@ public class AutonomousComplete extends LinearOpMode {
 
     private final Pose start = poseFactory.of(56, 8, 180);
     private final Pose collectGardenPos = poseFactory.of(8, 8, 180);
-    private final Pose shootPos2Start = poseFactory.of(8, 8, 180);
+
+    // Posições de tiro e coleta ajustadas para evitar duplicidade de zero comprimento
     private final Pose shootPos2 = poseFactory.of(46, 118, 90);
     private final Pose shootPos2Control1 = poseFactory.of(30, 110, 0);
+
     private final Pose collectFlowerPos1 = poseFactory.of(46, 125, 90);
-    private final Pose shootPos3 = poseFactory.of(46, 125, 90);
+
     private final Pose collectFlowerPos21Start = poseFactory.of(46, 125, 90);
     private final Pose collectFlowerPos21 = poseFactory.of(22, 47, 180);
     private final Pose collectFlowerPos21Control1 = poseFactory.of(30, 110, 0);
     private final Pose collectFlowerPos22 = poseFactory.of(16, 47, 180);
+
     private final Pose shootPos4 = poseFactory.of(56, 8, 180);
     private final Pose parkPosStart = poseFactory.of(56, 8, 180);
     private final Pose parkPos = poseFactory.of(10, 95, 0);
@@ -58,15 +62,11 @@ public class AutonomousComplete extends LinearOpMode {
     }
 
     public Path shootPos2() {
-        return Paths.curve(shootPos2Start, shootPos2Control1, shootPos2).linear(shootPos2Start, shootPos2);
+        return Paths.curve(start, shootPos2Control1, shootPos2).linear(start, shootPos2);
     }
 
     public Path collectFlowerPos1() {
         return Paths.line(shootPos2, collectFlowerPos1).constant(collectFlowerPos1);
-    }
-
-    public Path shootPos3() {
-        return Paths.line(collectFlowerPos1, shootPos3).constant(shootPos3);
     }
 
     public Path collectFlowerPos21() {
@@ -129,10 +129,10 @@ public class AutonomousComplete extends LinearOpMode {
         });
     }
 
-    // Rotina autônoma completa com outtake dinâmico ajustado pela Limelight
+    // Rotina autônoma corrigida sem caminhos duplicados de zero comprimento
     public Command autoRoutine() {
         return sequential(
-                runOuttakeDynamic(), // Liga o outtake dinâmico baseado na Limelight
+                runOuttakeDynamic(),
                 waitMs(3000),
                 openIndexerServo(),
                 runIndexerFeed(),
@@ -142,13 +142,15 @@ public class AutonomousComplete extends LinearOpMode {
                 runIntakeFeed(),
                 runIndexerFeed(),
 
+                // Vai para o jardim coletar
                 follow(follower, collectGardenPos()),
                 waitMs(2000),
                 stopIndexer(),
                 runIntakeReverse(),
 
+                // Vai para a posição de tiro 2
                 follow(follower, shootPos2()),
-                runOuttakeDynamic(), // Atualiza velocidade pelo ty da Limelight na posição 2
+                runOuttakeDynamic(),
                 waitMs(2000),
                 openIndexerServo(),
                 runIndexerFeed(),
@@ -159,12 +161,13 @@ public class AutonomousComplete extends LinearOpMode {
                 runIndexerFeed(),
                 setFlowerRampUp(false),
 
+                // Move para a coleta de flower 1
                 follow(follower, collectFlowerPos1()),
                 waitMs(2000),
                 stopIndexer(),
                 runIntakeReverse(),
 
-                follow(follower, shootPos3()),
+                // Disparo no mesmo local (sem precisar de follow duplicado de zero comprimento)
                 runOuttakeDynamic(),
                 waitMs(2000),
                 openIndexerServo(),
@@ -175,12 +178,14 @@ public class AutonomousComplete extends LinearOpMode {
                 runIntakeFeed(),
                 runIndexerFeed(),
 
+                // Coleta sequencial de flowers
                 follow(follower, collectFlowerPos21()),
                 follow(follower, collectFlowerPos22()),
                 waitMs(2000),
                 stopIndexer(),
                 runIntakeReverse(),
 
+                // Vai para o tiro 4 subindo a rampa em paralelo
                 parallel(
                         follow(follower, shootPos4()),
                         setFlowerRampUp(true)
@@ -195,6 +200,7 @@ public class AutonomousComplete extends LinearOpMode {
                 stopIntake(),
                 stopIndexer(),
 
+                // Estaciona
                 follow(follower, parkPos())
         );
     }
@@ -207,7 +213,7 @@ public class AutonomousComplete extends LinearOpMode {
         intake.init(hardwareMap);
         indexer.init(hardwareMap);
         outtake.init(hardwareMap);
-        turret.init(hardwareMap);
+        turret.init(hardwareMap, 1);
 
         follower.setPose(start);
         follower.update();
@@ -223,6 +229,7 @@ public class AutonomousComplete extends LinearOpMode {
             follower.update();
             Scheduler.execute();
 
+            // A torre roda livre o autônomo inteiro mirando ativamente
             turret.autoAim();
 
             telemetry.addData("x", follower.pose().x());

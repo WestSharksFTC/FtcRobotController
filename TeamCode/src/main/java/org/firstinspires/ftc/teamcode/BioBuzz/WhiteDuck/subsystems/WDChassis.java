@@ -7,6 +7,7 @@ import com.pedropathing.math.Pose;
 import com.pedropathing.paths.Path;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.IMU;
 
@@ -38,9 +39,9 @@ public class WDChassis {
         backRightMotor = hardwareMap.get(DcMotor.class, "rb");
 
         // Direções dos motores
-        frontLeftMotor.setDirection(DcMotor.Direction.REVERSE);
+        frontLeftMotor.setDirection(DcMotor.Direction.FORWARD);
         backLeftMotor.setDirection(DcMotor.Direction.FORWARD);
-        frontRightMotor.setDirection(DcMotor.Direction.FORWARD);
+        frontRightMotor.setDirection(DcMotor.Direction.REVERSE);
         backRightMotor.setDirection(DcMotor.Direction.REVERSE);
 
         // Sem encoders para o controle manual dos motores
@@ -69,10 +70,10 @@ public class WDChassis {
     // Controle básico do chassis (robot-centric)
     public void drive(double forward, double strafe, double rotate) {
         // Equações padrão das rodas Mecanum
-        double frontLeftPower  = forward - strafe - rotate;
-        double backLeftPower   = forward + strafe - rotate;
-        double frontRightPower = forward + strafe + rotate;
-        double backRightPower  = forward - strafe + rotate;
+        double frontLeftPower  = forward + strafe + rotate;
+        double backLeftPower   = forward - strafe + rotate;
+        double frontRightPower = forward - strafe - rotate;
+        double backRightPower  = forward + strafe - rotate;
 
         // Encontra a maior potência absoluta para normalizar se passar de 1.0
         double max = Math.max(1.0, Math.max(

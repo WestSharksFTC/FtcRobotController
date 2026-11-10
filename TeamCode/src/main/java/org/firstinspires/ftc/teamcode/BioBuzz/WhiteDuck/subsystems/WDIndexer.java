@@ -36,6 +36,9 @@ public class WDIndexer {
     }
 
     // Ações claras para o Motor do Indexer
+    public void setPower(double power){
+        indexer.setPower(power);
+    }
     public void feed() {
         indexer.setPower(0.75);
     }

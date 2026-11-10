@@ -44,10 +44,10 @@ public class WDOuttake {
     // TODO Cálculo inteligente para ajustar a velocidade automaticamente com base no ty da Limelight
     public void setVelocityFromLimelight(double currentTy) {
         // Trava o ty entre os limites mínimo e máximo esperados da sua calibração
-        double clampedTy = Range.clip(currentTy, -10.0, 15.0);
+        double clampedTy = Range.clip(currentTy, -8.0, 2.0);
 
         // Mapeia o ty para a velocidade correspondente do outtake
-        double calculatedVelocity = Range.scale(clampedTy, -10.0, 15.0, 1000.0, 760.0);
+        double calculatedVelocity = Range.scale(clampedTy, -8.0, 2.0, 760, 800);
 
         setVelocity(calculatedVelocity);
     }

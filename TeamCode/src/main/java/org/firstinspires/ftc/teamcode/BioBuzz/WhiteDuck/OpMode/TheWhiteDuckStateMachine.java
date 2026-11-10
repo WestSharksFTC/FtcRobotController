@@ -10,15 +10,17 @@ import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.subsystems.WDIntake;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.subsystems.WDOuttake;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuck.subsystems.WDTurret;
 
-@TeleOp(name = "WhiteDuck Completo VERMELHO", group = "WhiteDuck")
-public class TheWhiteDuckREDStateMachine extends OpMode {
+@TeleOp(name = "The WhiteDuck Completo", group = "WhiteDuck")
+public class TheWhiteDuckStateMachine extends OpMode {
     WDChassis chassis = new WDChassis();
     WDIntake intake = new WDIntake();
     WDIndexer indexer = new WDIndexer();
     WDOuttake outtake = new WDOuttake();
     WDTurret turret = new WDTurret();
 
-    boolean driveMode, isParking;
+    boolean isParking, isAbleToShoot;
+    boolean statusResetTimer = true;
+    boolean isIndexerActive = true;
 
     // Máquina de estados sem o IDLE (robot opera de forma contínua focada em coletar e atirar)
     public enum RobotState {
@@ -29,6 +31,7 @@ public class TheWhiteDuckREDStateMachine extends OpMode {
 
     private RobotState currentState = RobotState.INTAKING;
     private ElapsedTime shootTimer = new ElapsedTime();
+    private ElapsedTime isAbleToShootTimer = new ElapsedTime();
     private int pipeline;
 
     @Override
@@ -38,8 +41,10 @@ public class TheWhiteDuckREDStateMachine extends OpMode {
         indexer.init(hardwareMap);
         outtake.init(hardwareMap);
 
+        telemetry.addLine("RED");
+        telemetry.addLine("BLUE");
+
         chassis.resetYaw();
-        intake.upFlowerRamp();
     }
 
     @Override
@@ -82,39 +87,26 @@ public class TheWhiteDuckREDStateMachine extends OpMode {
             double strafe = gamepad1.left_stick_x;
             double turn = gamepad1.right_stick_x;
 
-            // Reset angle
-            if(gamepad1.leftStickButtonWasPressed()){
-                chassis.resetYaw();
-            }
-
-            // Drive mode
-            if(gamepad1.rightStickButtonWasPressed()) {
-                driveMode = !driveMode;
-            }
-
-            if(driveMode){
-                chassis.driveFieldRelative(drive, strafe, turn);
-            }else{
-                chassis.drive(drive, strafe, turn);
-            }
-        }
-
-        // ========== 2.1. CONTROLE MANUAL DA RAMPA DA FLOWER ==========
-        if (gamepad2.dpadUpWasPressed()) {
-            intake.upFlowerRamp();
-        } else if (gamepad2.dpadDownWasPressed()) {
-            intake.downFlowerRamp();
+            chassis.drive(drive, strafe, turn);
         }
 
         // ========== 3. MÁQUINA DE ESTADOS (COLETA E DISPARO AUTOMATIZADOS) ==========
-
         switch (currentState) {
             case INTAKING:
                 indexer.closeServo();
                 outtake.stop();
                 intake.feed();      // Usa o método padrão do intake
-                indexer.setPower(1.0);     // Puxa os pollens para dentro
+                turret.recentralize();
 
+                if(gamepad2.yWasPressed()){
+                    isIndexerActive = !isIndexerActive;
+                }
+
+                if(isIndexerActive){
+                    indexer.setPower(1.0);     // Puxa os pollens para dentro
+                }else{
+                    indexer.stop();
+                }
 
                 // Se o piloto apertar 'B' a qualquer momento, vai para o spinup do tiro
                 if (gamepad2.bWasPressed()) {
@@ -126,22 +118,30 @@ public class TheWhiteDuckREDStateMachine extends OpMode {
                 indexer.closeServo();
                 intake.stop();
                 indexer.stop();
+                turret.autoAim();
 
                 // O outtake calcula a velocidade dinamicamente com base no 'ty' da Limelight
                 double currentTy = turret.getTy();
                 outtake.setVelocityFromLimelight(currentTy);
 
+                isAbleToShoot = Math.abs(outtake.getVelocity() - outtake.getTargetVelocity()) < 10.0;
+                if(statusResetTimer && isAbleToShoot){
+                    isAbleToShootTimer.reset();
+                    statusResetTimer = false;
+                }
+
                 // Quando a roda do outtake atingir a velocidade ideal calculada, dispara
-                if (Math.abs(outtake.getVelocity() - outtake.getTargetVelocity()) < 10.0) {
+                if (isAbleToShoot && isAbleToShootTimer.milliseconds() > 1000) {
                     shootTimer.reset();
                     currentState = RobotState.SHOOTING_FIRE;
                 }
                 break;
 
             case SHOOTING_FIRE:
-                intake.reverse();
+                intake.stop();
                 indexer.openServo(); // Abre o portão do pollen
                 indexer.feed();      // Joga para fora
+                turret.autoAim();
 
                 // Mantém o outtake rodando durante o despejo
                 outtake.setVelocityFromLimelight(turret.getTy());
@@ -149,6 +149,8 @@ public class TheWhiteDuckREDStateMachine extends OpMode {
                 // Tempo de duração do disparo (3 segundos para esvaziar)
                 if (shootTimer.seconds() > 3.0) {
                     indexer.closeServo();         // Fecha o portão novamente
+                    isIndexerActive = true;
+                    statusResetTimer = true;
                     currentState = RobotState.INTAKING; // Retorna direto para a coleta
                 }
                 break;
@@ -156,23 +158,16 @@ public class TheWhiteDuckREDStateMachine extends OpMode {
 
 
         // ========== 4. TELEMETRIA POR SUBSISTEMAS ==========
-        telemetry.addData("--- MÁQUINA DE ESTADOS ---", "");
+        telemetry.addLine("========== MÁQUINA DE ESTADOS ==========");
         telemetry.addData("Estado do Robô", currentState);
 
-        telemetry.addData("--- CHASSIS ---", "");
-        telemetry.addData("Drive Mode", driveMode ? "Field Oriented" : "Robot Oriented");
-        telemetry.addData("Yaw (Angulo)", chassis.getImuYaw());
-
-        telemetry.addData("--- INTAKE & INDEXER ---", "");
-        telemetry.addData("Distância Sensor da Esquerda (CM)", indexer.getDistanceLeftCM());
-        telemetry.addData("Distância Sensor da Direita (CM)", indexer.getDistanceRightCM());
+        telemetry.addLine("========== GATE ==========");
         telemetry.addData("Portão Indexer", indexer.isClosed() ? "Fechado" : "Aberto");
 
-        telemetry.addData("--- OUTTAKE & TURRET ---", "");
+        telemetry.addLine("========== OUTTAKE & TURRET ==========");
         telemetry.addData("Pipeline da Limelight", pipeline == 0 ? "VERMELHO" : "AZUL");
-        telemetry.addData("Limelight Tx", turret.getTx());
-        telemetry.addData("Limelight Ty", turret.getTy());
         telemetry.addData("Outtake Velocity", outtake.getVelocity());
+        telemetry.addData("Turret Position", turret.getTurretPosition());
         telemetry.addData("Battery Voltage", outtake.getBatteryVoltage());
 
         telemetry.update();
