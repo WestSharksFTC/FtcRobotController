@@ -5,6 +5,9 @@ import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
@@ -94,6 +97,21 @@ public class Indexer extends SubsystemBase {
         telemetry.addData("Top Distance", "%.2f", getDistanceTopCM());
         telemetry.addData("Bottom Distance", "%.2f", getDistanceBottomCM());
         telemetry.addLine();
+    }
+
+    public void sendDashboardTelemetry() {
+        TelemetryPacket packet = new TelemetryPacket();
+
+        packet.put("Indexer/Current Power", getPower());
+
+        packet.put("Indexer/Gate Position", pollenLimiter.getPosition());
+        packet.put("Indexer/Gate Closed", isClosed() ? 1 : 0);
+
+        packet.put("Indexer/Top Distance (cm)", getDistanceTopCM());
+        packet.put("Indexer/Bottom Distance (cm)", getDistanceBottomCM());
+        packet.put("Indexer/Full", isIndexerFull() ? 1 : 0);
+
+        FtcDashboard.getInstance().sendTelemetryPacket(packet);
     }
 
 

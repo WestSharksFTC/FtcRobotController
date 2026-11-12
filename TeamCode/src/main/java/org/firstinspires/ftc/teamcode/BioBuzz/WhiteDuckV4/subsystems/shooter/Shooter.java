@@ -5,6 +5,9 @@ import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.utils.MathUtils;
 
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
@@ -96,6 +99,27 @@ public class Shooter extends SubsystemBase {
         telemetry.addData("Motor Power", "%.2f", outtake.getPower());
         telemetry.addData("At Target Velocity", isAtTargetVelocity());
         telemetry.addLine();
+    }
+
+    public void sendDashboardTelemetry() {
+        TelemetryPacket packet = new TelemetryPacket();
+
+        packet.put("Shooter/Motor Power", outtake.getPower());
+
+        packet.put("Shooter/Current RPM", getCurrentVelocityRPM());
+        packet.put("Shooter/Target RPM", getTargetVelocityRPM());
+
+        packet.put("Shooter/Velocity Error", getTargetVelocityRPM() - getCurrentVelocityRPM());
+
+        packet.put("Shooter/Current Velocity (ticks/s)", getCurrentVelocityTicksPerSecond());
+        packet.put("Shooter/Target Velocity (ticks/s)", getTargetVelocityTicksPerSecond());
+
+        packet.put("Shooter/Battery Voltage", getBatteryVoltage());
+        packet.put("Shooter/Applied kF", lastAppliedKF);
+
+        packet.put("Shooter/At Target Velocity", isAtTargetVelocity() ? 1 : 0);
+
+        FtcDashboard.getInstance().sendTelemetryPacket(packet);
     }
 
 

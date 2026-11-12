@@ -4,6 +4,9 @@ import org.firstinspires.ftc.robotcore.external.Telemetry;
 
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
@@ -13,10 +16,6 @@ public class Intake extends SubsystemBase{
     private DcMotor intake;
     private Servo flowerRampRight;
     private Servo flowerRampLeft;
-
-    private String currentState = "STOP";
-    private double commandedPower = 0.0;
-    private String rampState = "UNKNOWN";
 
     public void init(HardwareMap hardwareMap) {
         intake = hardwareMap.get(DcMotor.class, IntakeHardware.INTAKE_MOTOR);
@@ -84,6 +83,17 @@ public class Intake extends SubsystemBase{
         telemetry.addData("Ramp Right Position", "%.2f", getRightServoPosition());
         telemetry.addData("Ramp Left Position", "%.2f", getLeftServoPosition());
         telemetry.addLine();
+    }
+
+    public void sendDashboardTelemetry() {
+        TelemetryPacket packet = new TelemetryPacket();
+
+        packet.put("Intake/Current Power", getPower());
+
+        packet.put("Intake/Right Servo Position", getRightServoPosition());
+        packet.put("Intake/Left Servo Position", getLeftServoPosition());
+
+        FtcDashboard.getInstance().sendTelemetryPacket(packet);
     }
 
 

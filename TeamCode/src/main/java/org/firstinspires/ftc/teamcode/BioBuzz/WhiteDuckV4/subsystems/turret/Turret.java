@@ -5,6 +5,9 @@ import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.utils.MathUtils;
 
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 
+import com.acmerobotics.dashboard.FtcDashboard;
+import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.util.Range;
@@ -85,12 +88,28 @@ public class Turret extends SubsystemBase {
     public void getTelemetry(Telemetry telemetry) {
         telemetry.addLine("========== TURRET ==========");
         telemetry.addData("Current Position", "%.2f°", getCurrentPositionDegrees());
-        telemetry.addData("Current Position", "%.0f ticks/s", getCurrentPositionTicks());
+        telemetry.addData("Current Position (Ticks)", getCurrentPositionTicks());
         telemetry.addData("Target Position", "%.0f°", targetAngleDegrees);
         telemetry.addData("Error Position", "%.2f°", targetAngleDegrees - getCurrentPositionDegrees());
         telemetry.addData("Current Power", "%.2f", getPower());
         telemetry.addData("Current Motor Mode", turretMotor.getMode());
         telemetry.addData("At Target", isAtTarget());
         telemetry.addLine();
+    }
+
+    public void sendDashboardTelemetry() {
+        TelemetryPacket packet = new TelemetryPacket();
+
+        packet.put("Turret/Current Position (degrees)", getCurrentPositionDegrees());
+        packet.put("Turret/Current Position (ticks)", getCurrentPositionTicks());
+
+        packet.put("Turret/Target Position (degrees)", targetAngleDegrees);
+        packet.put("Turret/Position Error (degrees)", targetAngleDegrees - getCurrentPositionDegrees());
+
+        packet.put("Turret/Current Power", getPower());
+
+        packet.put("Turret/At Target", isAtTarget() ? 1 : 0);
+
+        FtcDashboard.getInstance().sendTelemetryPacket(packet);
     }
 }
