@@ -59,10 +59,6 @@ public class Turret extends SubsystemBase {
         turretMotor.setPower(TurretConstants.POSITION_POWER);
     }
 
-    public void recentralize() {
-        setTargetAngle(0.0);
-    }
-
     public boolean isAtTarget() {
         return Math.abs(targetAngleDegrees - getCurrentPositionDegrees()) <= TurretConstants.POSITION_TOLERANCE_DEGREES;
     }
@@ -111,5 +107,10 @@ public class Turret extends SubsystemBase {
         packet.put("Turret/At Target", isAtTarget() ? 1 : 0);
 
         FtcDashboard.getInstance().sendTelemetryPacket(packet);
+    }
+
+    @Override
+    public void periodic(){
+        sendDashboardTelemetry();
     }
 }

@@ -16,4 +16,16 @@ public class MathUtils {
     public static double rpmToTicksPerSecond(double rpm, double ticksPerRevolution) {
         return (rpm * ticksPerRevolution) / 60.0;
     }
+
+    public static double normalizeAngle(double angle) {
+        while (angle > 180) {
+            angle -= 360;
+        }
+
+        while (angle < -180) {
+            angle += 360;
+        }
+
+        return angle;
+    }
 }

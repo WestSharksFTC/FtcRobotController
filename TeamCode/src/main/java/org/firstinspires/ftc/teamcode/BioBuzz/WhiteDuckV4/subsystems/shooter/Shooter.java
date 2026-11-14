@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.subsystems.shooter;
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.utils.MathUtils;
 
+import com.qualcomm.robotcore.util.Range;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 
 import com.acmerobotics.dashboard.FtcDashboard;
@@ -66,6 +67,39 @@ public class Shooter extends SubsystemBase {
         outtake.setVelocityPIDFCoefficients(ShooterConstants.SHOOTER_KP, ShooterConstants.SHOOTER_KI, ShooterConstants.SHOOTER_KD, kF);
     }
 
+    public double getShooterVelocity(double currentDistanceIN) {
+        double[] distances = ShooterConstants.SHOOTER_DISTANCE_IN;
+        double[] velocities = ShooterConstants.SHOOTER_VELOCITY_RPM;
+
+        if (distances.length != velocities.length || distances.length == 0) {
+            return 0;
+        }
+
+        if (currentDistanceIN <= distances[0]) {
+            return velocities[0];
+        }
+
+        int lastIndex = distances.length - 1;
+
+        if (currentDistanceIN >= distances[lastIndex]) {
+            return velocities[lastIndex];
+        }
+
+        for (int i = 0; i < distances.length - 1; i++) {
+            double d1 = distances[i];
+            double d2 = distances[i + 1];
+
+            if (currentDistanceIN >= d1 && currentDistanceIN <= d2) {
+                double v1 = velocities[i];
+                double v2 = velocities[i + 1];
+
+                return Range.scale(currentDistanceIN, d1, d2, v1, v2);
+            }
+        }
+
+        return 0;
+    }
+
     public double getCurrentVelocityRPM(){
         return MathUtils.ticksPerSecondToRPM(getCurrentVelocityTicksPerSecond(), ShooterConstants.MOTOR_TICKS_PER_REV);
     }
@@ -126,5 +160,6 @@ public class Shooter extends SubsystemBase {
     @Override
     public void periodic(){
         updateFeedforwardCompensation();
+        sendDashboardTelemetry();
     }
 }

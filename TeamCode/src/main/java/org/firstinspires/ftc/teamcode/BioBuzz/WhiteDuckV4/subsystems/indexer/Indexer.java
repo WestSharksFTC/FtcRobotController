@@ -11,27 +11,21 @@ import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DistanceSensor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-import com.qualcomm.robotcore.hardware.Servo;
 
 public class Indexer extends SubsystemBase {
     private DcMotor indexer;
-    private Servo pollenLimiter;
     private DistanceSensor distanceSensorTop;
     private DistanceSensor distanceSensorBottom;
 
     public void init(HardwareMap hardwareMap) {
         indexer = hardwareMap.get(DcMotor.class, IndexerHardware.INDEXER_MOTOR);
-        pollenLimiter = hardwareMap.get(Servo.class, IndexerHardware.SERVO_GATE);
         distanceSensorTop = hardwareMap.get(DistanceSensor.class, IndexerHardware.DISTANCE_SENSOR_TOP);
         distanceSensorBottom = hardwareMap.get(DistanceSensor.class, IndexerHardware.DISTANCE_SENSOR_BOTTOM);
 
         indexer.setDirection(DcMotor.Direction.REVERSE);
-        pollenLimiter.setDirection(Servo.Direction.FORWARD);
 
         indexer.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         indexer.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
-
-        pollenLimiter.scaleRange(IndexerConstants.GATE_SCALE_RANGE_MIN, IndexerConstants.GATE_SCALE_RANGE_MAX);
     }
 
 
@@ -56,21 +50,6 @@ public class Indexer extends SubsystemBase {
         return indexer.getPower();
     }
 
-
-    // Servo do Indexer
-    public void openServo() {
-        pollenLimiter.setPosition(IndexerConstants.GATE_POSITION_OPEN);
-    }
-
-    public void closeServo() {
-        pollenLimiter.setPosition(IndexerConstants.GATE_POSITION_CLOSE);
-    }
-
-    public boolean isClosed() {
-        return pollenLimiter.getPosition() >= IndexerConstants.GATE_POSITION_CLOSE - 0.25;
-    }
-
-
     // Sensores de Distância
     public double getDistanceTopCM() {
         return distanceSensorTop.getDistance(DistanceUnit.CM);
@@ -93,7 +72,6 @@ public class Indexer extends SubsystemBase {
         telemetry.addLine("========== INDEXER ==========");
         telemetry.addData("Current Power", "%.2f", getPower());
         telemetry.addData("Indexer Full", isIndexerFull());
-        telemetry.addData("Gate Closed", isClosed());
         telemetry.addData("Top Distance", "%.2f", getDistanceTopCM());
         telemetry.addData("Bottom Distance", "%.2f", getDistanceBottomCM());
         telemetry.addLine();
@@ -103,9 +81,6 @@ public class Indexer extends SubsystemBase {
         TelemetryPacket packet = new TelemetryPacket();
 
         packet.put("Indexer/Current Power", getPower());
-
-        packet.put("Indexer/Gate Position", pollenLimiter.getPosition());
-        packet.put("Indexer/Gate Closed", isClosed() ? 1 : 0);
 
         packet.put("Indexer/Top Distance (cm)", getDistanceTopCM());
         packet.put("Indexer/Bottom Distance (cm)", getDistanceBottomCM());
@@ -117,6 +92,6 @@ public class Indexer extends SubsystemBase {
 
     @Override
     public void periodic(){
-        pollenLimiter.scaleRange(IndexerConstants.GATE_SCALE_RANGE_MIN, IndexerConstants.GATE_SCALE_RANGE_MAX);
+        sendDashboardTelemetry();
     }
 }

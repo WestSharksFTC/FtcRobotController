@@ -81,4 +81,11 @@ public class Chassis extends SubsystemBase {
 
         FtcDashboard.getInstance().sendTelemetryPacket(packet);
     }
+
+
+    @Override
+    public void periodic(){
+        update();
+        sendDashboardTelemetry();
+    }
 }
