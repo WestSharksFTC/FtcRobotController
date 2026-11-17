@@ -59,6 +59,10 @@ public class Indexer extends SubsystemBase {
         return distanceSensorBottom.getDistance(DistanceUnit.CM);
     }
 
+    public boolean isIndexerTopFull(){
+        return getDistanceTopCM() <= IndexerConstants.DETECTION_THRESHOLD_CM;
+    }
+
     public boolean isIndexerFull() {
         boolean hasPollenOnTop = getDistanceTopCM() <= IndexerConstants.DETECTION_THRESHOLD_CM;
         boolean hasPollenOnBottom = getDistanceBottomCM() <= IndexerConstants.DETECTION_THRESHOLD_CM;
