@@ -11,10 +11,9 @@ import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.commands.indexer.Index
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.commands.intake.IntakeCommand;
 
 public class CollectCommandGroup extends ParallelCommandGroup {
-
     public CollectCommandGroup(Gate gate, Intake intake, Indexer indexer){
         addCommands(
-                new GateCommand(gate, () -> false, () -> true),
+                new GateCommand(gate, () -> false),
 
                 new IntakeCommand(
                         intake,
@@ -31,7 +30,6 @@ public class CollectCommandGroup extends ParallelCommandGroup {
                         () -> false,
                         () -> indexer.isIndexerTopFull()
                 )
-
         );
     }
 }

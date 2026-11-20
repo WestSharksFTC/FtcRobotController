@@ -45,7 +45,7 @@ public class Intake extends SubsystemBase{
     }
 
     // Telemetria do Intake
-    public void addTelemetry(Telemetry telemetry) {
+    public void getTelemetry(Telemetry telemetry) {
         telemetry.addLine("========== INTAKE ==========");
         telemetry.addData("Current Power", "%.2f", getPower());
         telemetry.addLine();

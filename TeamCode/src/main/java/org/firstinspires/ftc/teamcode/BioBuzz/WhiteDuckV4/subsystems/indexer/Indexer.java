@@ -72,7 +72,7 @@ public class Indexer extends SubsystemBase {
 
 
     // Telemetria do Indexer
-    public void addTelemetry(Telemetry telemetry) {
+    public void getTelemetry(Telemetry telemetry) {
         telemetry.addLine("========== INDEXER ==========");
         telemetry.addData("Current Power", "%.2f", getPower());
         telemetry.addData("Indexer Full", isIndexerFull());

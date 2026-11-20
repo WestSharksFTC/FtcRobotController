@@ -27,21 +27,21 @@ public class Chassis extends SubsystemBase {
     }
 
     public void driveRobotCentric(double forward, double strafe, double turn) {
-        follower.manual(-forward, strafe, turn);
+        follower.manual(forward, strafe, turn);
     }
 
     public void driveRobotCentricHold(double forward, double strafe, double turn) {
-        ManualDrive.driveOrHold(follower, -forward, strafe, turn);
+        ManualDrive.driveOrHold(follower, forward, strafe, turn);
     }
 
     public void driveFieldCentric(double forward, double strafe, double turn) {
-        DrivePowers powers = ManualDrive.fieldCentric(-forward, strafe, turn, follower.pose().heading());
+        DrivePowers powers = ManualDrive.fieldCentric(forward, strafe, turn, follower.pose().heading());
 
         follower.manual(powers);
     }
 
     public void driveFieldCentricHold(double forward, double strafe, double turn) {
-        DrivePowers powers = ManualDrive.fieldCentric(-forward, strafe, turn, follower.pose().heading());
+        DrivePowers powers = ManualDrive.fieldCentric(forward, strafe, turn, follower.pose().heading());
 
         ManualDrive.driveOrHold(follower, powers);
     }

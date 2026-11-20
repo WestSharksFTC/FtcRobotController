@@ -10,38 +10,23 @@ import java.util.function.BooleanSupplier;
 public class FlowerRampCommand extends CommandBase {
     private final FlowerRamp flowerRamp;
 
-    private final BooleanSupplier rampUpButton;
-    private final BooleanSupplier rampDownButton;
+    private final BooleanSupplier isRampUpButton;
 
-    // Estados anteriores dos botões
-    private boolean previousRampUp = false;
-    private boolean previousRampDown = false;
-
-    public FlowerRampCommand(FlowerRamp flowerRamp, BooleanSupplier rampUpButton, BooleanSupplier rampDownButton){
+    public FlowerRampCommand(FlowerRamp flowerRamp, BooleanSupplier isRampUpButton){
         this.flowerRamp = flowerRamp;
 
-        this.rampUpButton = rampUpButton;
-        this.rampDownButton = rampDownButton;
+        this.isRampUpButton = isRampUpButton;
 
         addRequirements(flowerRamp);
     }
 
     @Override
     public void execute() {
-        // Leitura dos botões da rampa
-        boolean currentRampUp = rampUpButton.getAsBoolean();
-        boolean currentRampDown = rampDownButton.getAsBoolean();
-
-        // Rampa: detecta apenas o momento do pressionamento
-        if (currentRampUp && !previousRampUp) {
+        if (isRampUpButton.getAsBoolean()) {
             flowerRamp.upFlowerRamp();
-        } else if (currentRampDown && !previousRampDown) {
+        } else {
             flowerRamp.downFlowerRamp();
         }
-
-        // Atualiza os estados anteriores
-        previousRampUp = currentRampUp;
-        previousRampDown = currentRampDown;
     }
 
     @Override

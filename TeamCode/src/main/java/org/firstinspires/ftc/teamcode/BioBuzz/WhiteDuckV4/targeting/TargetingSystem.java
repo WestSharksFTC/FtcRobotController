@@ -28,11 +28,21 @@ public class TargetingSystem {
         return atAudienceSide() ? FieldConstants.AUDIENCE_HIVE_Y : FieldConstants.BACK_HIVE_Y;
     }
 
-    public double getTargetHeading(){
+    private double getTurretX() {
         Pose robotPose = chassis.getPose();
 
-        double deltaX = getTargetX() - robotPose.x();
-        double deltaY = getTargetY() - robotPose.y();
+        return robotPose.x() - TargetingSystemConstants.TURRET_OFFSET_IN * Math.cos(robotPose.heading());
+    }
+
+    private double getTurretY() {
+        Pose robotPose = chassis.getPose();
+
+        return robotPose.y() - TargetingSystemConstants.TURRET_OFFSET_IN * Math.sin(robotPose.heading());
+    }
+
+    public double getTargetHeading(){
+        double deltaX = getTargetX() - getTurretX();
+        double deltaY = getTargetY() - getTurretY();
 
         return Math.toDegrees(Math.atan2(deltaY, deltaX));
     }
@@ -44,10 +54,8 @@ public class TargetingSystem {
     }
 
     public double getTargetDistanceIN() {
-        Pose robotPose = chassis.getPose();
-
-        double deltaX = getTargetX() - robotPose.x();
-        double deltaY = getTargetY() - robotPose.y();
+        double deltaX = getTargetX() - getTurretX();
+        double deltaY = getTargetY() - getTurretY();
 
         return Math.hypot(deltaX, deltaY);
     }

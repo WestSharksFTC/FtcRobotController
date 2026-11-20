@@ -46,7 +46,7 @@ public class FlowerRamp extends SubsystemBase{
 
 
     // Telemetria do Intake
-    public void addTelemetry(Telemetry telemetry) {
+    public void getTelemetry(Telemetry telemetry) {
         telemetry.addLine("========== FLOWER RAMP ==========");
         telemetry.addData("Ramp Right Position", "%.2f", getRightServoPosition());
         telemetry.addData("Ramp Left Position", "%.2f", getLeftServoPosition());

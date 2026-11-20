@@ -37,7 +37,7 @@ public class Gate extends SubsystemBase {
     }
 
     // Telemetria do Indexer
-    public void addTelemetry(Telemetry telemetry) {
+    public void getTelemetry(Telemetry telemetry) {
         telemetry.addLine("========== GATE ==========");
         telemetry.addData("Gate Closed", isClosed());
         telemetry.addLine();

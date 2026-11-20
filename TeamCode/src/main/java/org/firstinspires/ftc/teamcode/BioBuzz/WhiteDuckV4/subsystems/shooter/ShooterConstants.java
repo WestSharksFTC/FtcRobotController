@@ -13,6 +13,6 @@ public class ShooterConstants {
     public static double SHOOTER_KD = 0.0;
 
 
-    public static final double[] SHOOTER_DISTANCE_IN = {};
-    public static final double[] SHOOTER_VELOCITY_RPM = {};
+    public static final double[] SHOOTER_DISTANCE_IN = {20.0, 100.0};
+    public static final double[] SHOOTER_VELOCITY_RPM = {1500.0, 2000.0};
 }

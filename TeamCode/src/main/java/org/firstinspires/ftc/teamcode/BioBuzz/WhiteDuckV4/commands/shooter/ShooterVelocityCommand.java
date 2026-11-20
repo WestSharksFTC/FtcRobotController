@@ -8,18 +8,18 @@ import java.util.function.DoubleSupplier;
 
 public class ShooterVelocityCommand extends CommandBase {
     private final Shooter shooter;
-    private final DoubleSupplier velocitySupplier;
+    private final DoubleSupplier velocitySupplierRPM;
 
-    public ShooterVelocityCommand(Shooter shooter, DoubleSupplier velocitySupplier) {
+    public ShooterVelocityCommand(Shooter shooter, DoubleSupplier velocitySupplierRPM) {
         this.shooter = shooter;
-        this.velocitySupplier = velocitySupplier;
+        this.velocitySupplierRPM = velocitySupplierRPM;
 
         addRequirements(shooter);
     }
 
     @Override
     public void execute() {
-        shooter.setVelocityRPM(velocitySupplier.getAsDouble());
+        shooter.setVelocityRPM(velocitySupplierRPM.getAsDouble());
     }
 
     @Override

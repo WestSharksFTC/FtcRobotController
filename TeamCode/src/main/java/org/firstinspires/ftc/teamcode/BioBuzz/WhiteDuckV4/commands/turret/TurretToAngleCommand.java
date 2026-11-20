@@ -18,13 +18,13 @@ public class TurretToAngleCommand extends CommandBase {
     }
 
     @Override
-    public void initialize() {
+    public void execute() {
         turret.setTargetAngle(targetAngle.getAsDouble());
     }
 
     @Override
     public boolean isFinished() {
-        return turret.isAtTarget();
+        return false;
     }
 
     @Override
