@@ -87,9 +87,9 @@ public class TesteComp extends CommandOpMode{
         // Commands
         driveCommand = new DriveCommand(
                 chassis,
-                () -> -operator.getLeftY(),
-                () -> operator.getLeftX(),
-                () -> operator.getRightX()
+                () -> operator.getLeftY(),
+                () -> -operator.getLeftX(),
+                () -> -operator.getRightX()
         );
 
         chassis.setDefaultCommand(driveCommand);
