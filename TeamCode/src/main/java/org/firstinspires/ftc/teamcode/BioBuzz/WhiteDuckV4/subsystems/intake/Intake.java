@@ -1,20 +1,27 @@
 package org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.subsystems.intake;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
+import static org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.subsystems.intake.IntakeConstants.*;
+import static org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.subsystems.intake.IntakeHardware.*;
 
 import com.seattlesolvers.solverslib.command.SubsystemBase;
-
-import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
 public class Intake extends SubsystemBase{
-    private DcMotor intake;
+    private final DcMotor intake;
 
-    public void init(HardwareMap hardwareMap) {
-        intake = hardwareMap.get(DcMotor.class, IntakeHardware.INTAKE_MOTOR);
+    public enum State{
+        TRANSFER,
+        FEED,
+        REVERSE,
+        STOP
+    }
+
+    private State state = State.STOP;
+
+    public Intake(HardwareMap hardwareMap) {
+        intake = hardwareMap.get(DcMotor.class, INTAKE_MOTOR);
 
         intake.setDirection(DcMotor.Direction.FORWARD);
 
@@ -22,45 +29,34 @@ public class Intake extends SubsystemBase{
         intake.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
     }
 
-
-    // Motor do Intake
-    public void transfer(){
-        intake.setPower(IntakeConstants.TRANSFER_POWER);
+    public void setState(State state){
+        this.state = state;
+        update();
     }
 
-    public void feed() {
-        intake.setPower(IntakeConstants.FEED_POWER);
+    public State getState(){
+        return state;
     }
 
-    public void reverse() {
-        intake.setPower(IntakeConstants.REVERSE_POWER);
-    }
-
-    public void stop() {
-        intake.setPower(IntakeConstants.STOP_POWER);
-    }
-
-    public double getPower(){
-        return intake.getPower();
-    }
-
-    // Telemetria do Intake
-    public void getTelemetry(Telemetry telemetry) {
-        telemetry.addLine("========== INTAKE ==========");
-        telemetry.addData("Current Power", "%.2f", getPower());
-        telemetry.addLine();
-    }
-
-    public void sendDashboardTelemetry() {
-        TelemetryPacket packet = new TelemetryPacket();
-
-        packet.put("Intake/Current Power", getPower());
-
-        FtcDashboard.getInstance().sendTelemetryPacket(packet);
+    private void update(){
+        switch(state){
+            case TRANSFER:
+                intake.setPower(TRANSFER_POWER);
+                break;
+            case FEED:
+                intake.setPower(FEED_POWER);
+                break;
+            case REVERSE:
+                intake.setPower(REVERSE_POWER);
+                break;
+            case STOP:
+                intake.setPower(STOP_POWER);
+                break;
+        }
     }
 
     @Override
     public void periodic(){
-        sendDashboardTelemetry();
+        update();
     }
 }

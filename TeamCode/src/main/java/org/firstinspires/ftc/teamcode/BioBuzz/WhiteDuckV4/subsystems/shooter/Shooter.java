@@ -1,165 +1,152 @@
 package org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.subsystems.shooter;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
+import static org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.subsystems.shooter.ShooterConstants.*;
+import static org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.subsystems.shooter.ShooterHardware.*;
+
+import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.targeting.TargetingSystem;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.utils.MathUtils;
 
-import com.qualcomm.robotcore.util.Range;
 import com.seattlesolvers.solverslib.command.SubsystemBase;
-
-import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.VoltageSensor;
+import com.seattlesolvers.solverslib.util.TelemetryData;
 
 public class Shooter extends SubsystemBase {
     private DcMotorEx outtake;
     private VoltageSensor batteryVoltageSensor;
+    private TargetingSystem targetingSystem;
+    private ShooterTable shooterTable;
 
+    public enum State{
+        AUTO_VELOCITY,
+        MANUAL_VELOCITY,
+        STOP
+    }
+
+    private State state = State.STOP;
+
+    private double distanceIN = 0.0;
     private double targetRPM = 0.0;
     private double lastAppliedKF = Double.NaN;
 
-    public void init(HardwareMap hardwareMap) {
-        outtake = hardwareMap.get(DcMotorEx.class, ShooterHardware.SHOOTER_MOTOR);
+    public Shooter(HardwareMap hardwareMap) {
+        outtake = hardwareMap.get(DcMotorEx.class, SHOOTER_MOTOR);
         batteryVoltageSensor = hardwareMap.voltageSensor.iterator().next();
 
         outtake.setDirection(DcMotorEx.Direction.FORWARD);
         outtake.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         outtake.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
-
-        updateFeedforwardCompensation();
     }
 
-    public void setVelocityRPM(double targetRPM) {
+    public void setTargetingSystemAndShooterTable(TargetingSystem targetingSystem, ShooterTable shooterTable){
+        this.targetingSystem = targetingSystem;
+        this.shooterTable = shooterTable;
+    }
+
+    public void setState(State state){
+        this.state = state;
+        update();
+    }
+
+    public State getState(){
+        return state;
+    }
+
+    public void update(){
+        switch(state){
+            case AUTO_VELOCITY:
+                if(targetingSystem != null && shooterTable != null){
+                    this.distanceIN = targetingSystem.getTargetDistanceIN();
+                    this.targetRPM = shooterTable.getShooterVelocity(distanceIN);
+                    setVelocityRPM(targetRPM);
+                }else{
+                    stop();
+                }
+                break;
+            case MANUAL_VELOCITY:
+                setVelocityRPM(targetRPM);
+                break;
+            case STOP:
+                stop();
+                break;
+        }
+    }
+
+    // Velocity Control
+    public void setManualVelocity(double targetRPM){
         this.targetRPM = targetRPM;
+        setState(State.MANUAL_VELOCITY);
+    }
 
-        double targetTicksPerSecond = MathUtils.rpmToTicksPerSecond(targetRPM, ShooterConstants.MOTOR_TICKS_PER_REV);
-
+    private void setVelocityRPM(double targetRPM) {
+        this.targetRPM = targetRPM;
+        double targetTicksPerSecond = MathUtils.rpmToTicksPerSecond(targetRPM, MOTOR_TICKS_PER_REV);
         outtake.setVelocity(targetTicksPerSecond);
     }
 
-    public void stop() {
+    private void stop() {
         targetRPM = 0.0;
         outtake.setPower(0.0);
     }
 
     public boolean isAtTargetVelocity() {
-        return targetRPM > 0.0 && Math.abs(getTargetVelocityRPM() - getCurrentVelocityRPM()) <= ShooterConstants.VELOCITY_TOLERANCE_RPM;
+        return targetRPM > 0.0 && Math.abs(getTargetVelocityRPM() - getCurrentVelocityRPM()) <= VELOCITY_TOLERANCE_RPM;
     }
 
-    private void updateFeedforwardCompensation() {
-        double currentVoltage = getBatteryVoltage();
-
-        if (currentVoltage <= 0.0) {
-            currentVoltage = ShooterConstants.NOMINAL_VOLTAGE;
-        }
-
-        double adjustedKF = ShooterConstants.BASE_KF * (ShooterConstants.NOMINAL_VOLTAGE / currentVoltage);
-
-        if (Double.isNaN(lastAppliedKF) || Math.abs(adjustedKF - lastAppliedKF) > 0.001) {
-            updatePIDF(adjustedKF);
-            lastAppliedKF = adjustedKF;
-        }
-    }
-
-    private void updatePIDF(double kF) {
-        outtake.setVelocityPIDFCoefficients(ShooterConstants.SHOOTER_KP, ShooterConstants.SHOOTER_KI, ShooterConstants.SHOOTER_KD, kF);
-    }
-
-    public double getShooterVelocity(double currentDistanceIN) {
-        double[] distances = ShooterConstants.SHOOTER_DISTANCE_IN;
-        double[] velocities = ShooterConstants.SHOOTER_VELOCITY_RPM;
-
-        if (distances.length != velocities.length || distances.length == 0) {
-            return 0;
-        }
-
-        if (currentDistanceIN <= distances[0]) {
-            return velocities[0];
-        }
-
-        int lastIndex = distances.length - 1;
-
-        if (currentDistanceIN >= distances[lastIndex]) {
-            return velocities[lastIndex];
-        }
-
-        for (int i = 0; i < distances.length - 1; i++) {
-            double d1 = distances[i];
-            double d2 = distances[i + 1];
-
-            if (currentDistanceIN >= d1 && currentDistanceIN <= d2) {
-                double v1 = velocities[i];
-                double v2 = velocities[i + 1];
-
-                return Range.scale(currentDistanceIN, d1, d2, v1, v2);
-            }
-        }
-
-        return 0;
+    // State Read
+    public double getCurrentVelocityTicksPerSecond(){
+        return outtake.getVelocity();
     }
 
     public double getCurrentVelocityRPM(){
-        return MathUtils.ticksPerSecondToRPM(getCurrentVelocityTicksPerSecond(), ShooterConstants.MOTOR_TICKS_PER_REV);
+        return MathUtils.ticksPerSecondToRPM(getCurrentVelocityTicksPerSecond(), MOTOR_TICKS_PER_REV);
     }
 
-    public double getCurrentVelocityTicksPerSecond() {
-        return outtake.getVelocity();
+    public double getTargetVelocityTicksPerSecond(){
+        return MathUtils.rpmToTicksPerSecond(targetRPM, MOTOR_TICKS_PER_REV);
     }
 
     public double getTargetVelocityRPM(){
         return targetRPM;
     }
 
-    public double getTargetVelocityTicksPerSecond() {
-        return MathUtils.rpmToTicksPerSecond(targetRPM, ShooterConstants.MOTOR_TICKS_PER_REV);
+    public double getBatteryVoltage(){
+        double voltage = batteryVoltageSensor.getVoltage();
+        return voltage > 0.0 ? voltage : NOMINAL_VOLTAGE;
     }
 
-    public double getBatteryVoltage() {
-        return batteryVoltageSensor.getVoltage();
+    // PIDF Compensation
+    private double calculateAdjustedKF() {
+        return BASE_KF * (NOMINAL_VOLTAGE / getBatteryVoltage());
     }
 
+    private void updateFeedforwardCompensation() {
+        double adjustedKF = calculateAdjustedKF();
+
+        if (Double.isNaN(lastAppliedKF) || Math.abs(adjustedKF - lastAppliedKF) > 0.001) {
+            outtake.setVelocityPIDFCoefficients(SHOOTER_KP, SHOOTER_KI, SHOOTER_KD, adjustedKF);
+            lastAppliedKF = adjustedKF;
+        }
+    }
 
     // Telemetria do Shooter
-    public void getTelemetry(Telemetry telemetry) {
-        telemetry.addLine("========== SHOOTER ==========");
-        telemetry.addData("Current RPM", "%.2f", getCurrentVelocityRPM());
-        telemetry.addData("Target RPM", "%.0f", getTargetVelocityRPM());
-        telemetry.addData("Velocity Error", "%.2f RPM", getTargetVelocityRPM() - getCurrentVelocityRPM());
-        telemetry.addData("Current Velocity", "%.2f ticks/s", getCurrentVelocityTicksPerSecond());
-        telemetry.addData("Battery Voltage", "%.2f V", getBatteryVoltage());
-        telemetry.addData("Applied kF", "%.4f", lastAppliedKF);
-        telemetry.addData("Motor Power", "%.2f", outtake.getPower());
+    public void addTelemetry(TelemetryData telemetry) {
+        telemetry.addData("Current RPM", getCurrentVelocityRPM());
+        telemetry.addData("Target RPM", getTargetVelocityRPM());
+        telemetry.addData("Velocity Error RPM", getTargetVelocityRPM() - getCurrentVelocityRPM());
+        telemetry.addData("Current TPS", getCurrentVelocityTicksPerSecond());
+        telemetry.addData("Target TPS", getTargetVelocityTicksPerSecond());
+        telemetry.addData("Battery Voltage", getBatteryVoltage());
+        telemetry.addData("Applied kF",  lastAppliedKF);
+        telemetry.addData("Motor Power", outtake.getPower());
         telemetry.addData("At Target Velocity", isAtTargetVelocity());
-        telemetry.addLine();
     }
-
-    public void sendDashboardTelemetry() {
-        TelemetryPacket packet = new TelemetryPacket();
-
-        packet.put("Shooter/Motor Power", outtake.getPower());
-
-        packet.put("Shooter/Current RPM", getCurrentVelocityRPM());
-        packet.put("Shooter/Target RPM", getTargetVelocityRPM());
-
-        packet.put("Shooter/Velocity Error", getTargetVelocityRPM() - getCurrentVelocityRPM());
-
-        packet.put("Shooter/Current Velocity (ticks/s)", getCurrentVelocityTicksPerSecond());
-        packet.put("Shooter/Target Velocity (ticks/s)", getTargetVelocityTicksPerSecond());
-
-        packet.put("Shooter/Battery Voltage", getBatteryVoltage());
-        packet.put("Shooter/Applied kF", lastAppliedKF);
-
-        packet.put("Shooter/At Target Velocity", isAtTargetVelocity() ? 1 : 0);
-
-        FtcDashboard.getInstance().sendTelemetryPacket(packet);
-    }
-
 
     @Override
     public void periodic(){
         updateFeedforwardCompensation();
-        sendDashboardTelemetry();
+        update();
     }
 }

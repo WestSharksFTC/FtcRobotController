@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.subsystems.chassis;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
+import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.utils.OpModeStorage;
 import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import com.seattlesolvers.solverslib.command.SubsystemBase;
@@ -14,12 +15,14 @@ import com.pedropathing.follower.ManualDrive;
 import com.pedropathing.drivetrain.DrivePowers;
 
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.seattlesolvers.solverslib.util.TelemetryData;
 
 public class Chassis extends SubsystemBase {
-    private Follower follower;
+    private final Follower follower;
 
-    public void init(HardwareMap hardwareMap) {
+    public Chassis(HardwareMap hardwareMap) {
         follower = Constants.create(hardwareMap);
+        setPose(OpModeStorage.autonomousEndPose);
     }
 
     public Follower getFollower() {
@@ -58,34 +61,20 @@ public class Chassis extends SubsystemBase {
         follower.stop();
     }
 
-    public void update() {
+    private void update() {
         follower.update();
     }
 
 
     // Telemetria do Chassis
-    public void getTelemetry(Telemetry telemetry) {
-        telemetry.addLine("========== CHASSIS ==========");
-        telemetry.addData("Robot X", "%.2f", getPose().x());
-        telemetry.addData("Robot Y", "%.2f", getPose().y());
-        telemetry.addData("Robot Heading", "%.2f°", Math.toDegrees(getPose().heading()));
-        telemetry.addLine();
+    public void addTelemetry(TelemetryData telemetry) {
+        telemetry.addData("Robot X", getPose().x());
+        telemetry.addData("Robot Y", getPose().y());
+        telemetry.addData("Robot Heading", Math.toDegrees(getPose().heading()));
     }
-
-    public void sendDashboardTelemetry() {
-        TelemetryPacket packet = new TelemetryPacket();
-
-        packet.put("Chassis/X", getPose().x());
-        packet.put("Chassis/Y", getPose().y());
-        packet.put("Chassis/Heading (degrees)", Math.toDegrees(getPose().heading()));
-
-        FtcDashboard.getInstance().sendTelemetryPacket(packet);
-    }
-
 
     @Override
     public void periodic(){
         update();
-        sendDashboardTelemetry();
     }
 }

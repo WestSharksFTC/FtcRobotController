@@ -1,33 +1,22 @@
 package org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.commands.turret;
 
 import com.seattlesolvers.solverslib.command.CommandBase;
-
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.subsystems.turret.Turret;
-import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.targeting.TargetingSystem;
 
 public class TurretAutoAimCommand extends CommandBase {
     private final Turret turret;
-    private final TargetingSystem targetingSystem;
 
-    public TurretAutoAimCommand(Turret turret, TargetingSystem targetingSystem) {
+    public TurretAutoAimCommand(Turret turret){
         this.turret = turret;
-        this.targetingSystem = targetingSystem;
-
-        addRequirements(turret);
     }
 
     @Override
-    public void execute() {
-        turret.setTargetAngle(targetingSystem.getTurretAngle());
+    public void initialize() {
+        turret.setState(Turret.State.AUTO_AIM);
     }
 
     @Override
-    public boolean isFinished() {
-        return false;
-    }
-
-    @Override
-    public void end(boolean interrupted) {
-        turret.stop();
+    public boolean isFinished(){
+        return true;
     }
 }

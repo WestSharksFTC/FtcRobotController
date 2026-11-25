@@ -1,61 +1,63 @@
 package org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.subsystems.gate;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
+import static org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.subsystems.gate.GateHardware.*;
+import static org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.subsystems.gate.GateConstants.*;
 
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 
-import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
-
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.seattlesolvers.solverslib.util.TelemetryData;
 
 public class Gate extends SubsystemBase {
-    private Servo pollenLimiter;
+    private final Servo pollenLimiter;
 
-    public void init(HardwareMap hardwareMap) {
-        pollenLimiter = hardwareMap.get(Servo.class, GateHardware.SERVO_GATE);
+    public enum State{
+        OPEN,
+        CLOSE
+    }
+
+    private State state = State.CLOSE;
+
+    public Gate(HardwareMap hardwareMap) {
+        pollenLimiter = hardwareMap.get(Servo.class, SERVO_GATE);
 
         pollenLimiter.setDirection(Servo.Direction.FORWARD);
 
-        pollenLimiter.scaleRange(GateConstants.GATE_SCALE_RANGE_MIN, GateConstants.GATE_SCALE_RANGE_MAX);
-
-        closeServo();
+        pollenLimiter.scaleRange(GATE_SCALE_RANGE_MIN, GATE_SCALE_RANGE_MAX);
     }
 
-    // Servo do Indexer
-    public void openServo() {
-        pollenLimiter.setPosition(GateConstants.GATE_POSITION_OPEN);
+    public void setState(State state){
+        this.state = state;
+        update();
     }
 
-    public void closeServo() {
-        pollenLimiter.setPosition(GateConstants.GATE_POSITION_CLOSE);
+    public void toggle(){
+        setState(getState() == State.OPEN ? State.CLOSE : State.OPEN);
     }
 
-    public boolean isClosed() {
-        return pollenLimiter.getPosition() >= GateConstants.GATE_POSITION_CLOSE - 0.25;
+    public State getState(){
+        return state;
     }
 
-    // Telemetria do Indexer
-    public void getTelemetry(Telemetry telemetry) {
-        telemetry.addLine("========== GATE ==========");
-        telemetry.addData("Gate Closed", isClosed());
-        telemetry.addLine();
+    private void update(){
+        switch(state){
+            case OPEN:
+                pollenLimiter.setPosition(GATE_POSITION_OPEN);
+                break;
+            case CLOSE:
+                pollenLimiter.setPosition(GATE_POSITION_CLOSE);
+                break;
+        }
     }
 
-    public void sendDashboardTelemetry() {
-        TelemetryPacket packet = new TelemetryPacket();
-
-        packet.put("Gate/Servo Position", pollenLimiter.getPosition());
-        packet.put("Gate/Gate Closed", isClosed() ? 1 : 0);
-
-        FtcDashboard.getInstance().sendTelemetryPacket(packet);
+    public void addTelemetry(TelemetryData telemetry) {
+        telemetry.addData("Gate State", state);
+        telemetry.addData("Gate Position", pollenLimiter.getPosition());
     }
-
 
     @Override
     public void periodic(){
-        pollenLimiter.scaleRange(GateConstants.GATE_SCALE_RANGE_MIN, GateConstants.GATE_SCALE_RANGE_MAX);
-        sendDashboardTelemetry();
+        update();
     }
 }

@@ -64,11 +64,6 @@ public class DriveCommand extends CommandBase {
     }
 
     @Override
-    public boolean isFinished() {
-        return false;
-    }
-
-    @Override
     public void end(boolean interrupted){
         chassis.stop();
     }
