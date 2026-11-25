@@ -85,6 +85,8 @@ public class TesteTop extends CommandOpMode{
         pollenSensor = new PollenSensor(hardwareMap);
         shooter = new Shooter(hardwareMap);
         turret = new Turret(hardwareMap);
+        targetingSystem = new TargetingSystem(chassis);
+        shooterTable = new ShooterTable();
         shooter.setTargetingSystemAndShooterTable(targetingSystem, shooterTable);
         turret.setTargetingSystem(targetingSystem);
 
@@ -158,11 +160,14 @@ public class TesteTop extends CommandOpMode{
         // telemetryData.addData("Indexer State", indexer.getState());
         // telemetryData.addData("Gate State", gate.getState());
         // telemetryData.addData("Flower Ramp State", flowerRamp.getState());
-        // telemetryData.addData("Velocity no button", shooterVeleocityRPM);
-        telemetryData.addData("Angle no button", turretAngleDegrees);
+        telemetryData.addData("Velocity no button", shooterVeleocityRPM);
+        telemetryData.addData("Velocity na flywheel", shooter.getCurrentVelocityRPM());
+        telemetryData.addData("Target Velocity", shooter.getTargetVelocityRPM());
+        telemetryData.addData("Distance", targetingSystem.getTargetDistanceIN());
+        // telemetryData.addData("Angle no button", turretAngleDegrees);
         // pollenSensor.addTelemetry(telemetryData);
         // shooter.addTelemetry(telemetryData);
-        turret.addTelemetry(telemetryData);
+        // turret.addTelemetry(telemetryData);
         telemetryData.update();
     }
 }

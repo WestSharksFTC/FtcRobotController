@@ -3,8 +3,8 @@ package org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.subsystems.shooter;
 import com.qualcomm.robotcore.util.Range;
 
 public class ShooterTable {
-    public static final double[] SHOOTER_DISTANCE_IN = {20.0, 100.0};
-    public static final double[] SHOOTER_VELOCITY_RPM = {1500.0, 2000.0};
+    public static final double[] SHOOTER_DISTANCE_IN = {45.0, 50.0, 55.0, 90.0};
+    public static final double[] SHOOTER_VELOCITY_RPM = {1580.0, 1600.0, 1620.0, 1800.0};
 
     public double getShooterVelocity(double currentDistanceIN) {
         double[] distances = SHOOTER_DISTANCE_IN;

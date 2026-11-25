@@ -5,8 +5,6 @@ import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.subsystems.chassis.Cha
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.field.FieldConstants;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.utils.MathUtils;
 
-import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
 import com.pedropathing.math.Pose;
 
 public class TargetingSystem {
@@ -60,7 +58,7 @@ public class TargetingSystem {
         return Math.hypot(deltaX, deltaY);
     }
 
-    public void getTelemetry(Telemetry telemetry) {
+    public void addTelemetry(Telemetry telemetry) {
         telemetry.addLine("========== TARGETING ==========");
         telemetry.addData("Target Hive", atAudienceSide() ? "Audience" : "Back");
         telemetry.addData("Target X", "%.2f", getTargetX());
@@ -69,18 +67,5 @@ public class TargetingSystem {
         telemetry.addData("Target Heading", "%.2f°", getTargetHeading());
         telemetry.addData("Turret Angle", "%.2f°", getTurretAngle());
         telemetry.addLine();
-    }
-
-    public void sendDashboardTelemetry() {
-        TelemetryPacket packet = new TelemetryPacket();
-
-        packet.put("Targeting/Target Hive", atAudienceSide() ? 0 : 1);
-        packet.put("Targeting/Target X", getTargetX());
-        packet.put("Targeting/Target Y", getTargetY());
-        packet.put("Targeting/Distance (in)", getTargetDistanceIN());
-        packet.put("Targeting/Target Heading (degrees)", getTargetHeading());
-        packet.put("Targeting/Turret Angle (degrees)", getTurretAngle());
-
-        FtcDashboard.getInstance().sendTelemetryPacket(packet);
     }
 }
