@@ -26,7 +26,7 @@ public class TransferCycleCommand extends SequentialCommandGroup {
 
                 // 2. Liga intake e indexer em TRANSFER pelo tempo de saída no shooter
                 new ParallelDeadlineGroup(
-                        new WaitCommand(3000),
+                        new WaitCommand(2000),
 
                         new IntakeTransfer(intake),
                         new IndexerTransfer(indexer)

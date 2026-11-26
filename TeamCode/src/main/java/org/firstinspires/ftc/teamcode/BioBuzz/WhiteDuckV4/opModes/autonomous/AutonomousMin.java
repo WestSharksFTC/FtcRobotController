@@ -15,8 +15,12 @@ import com.seattlesolvers.solverslib.util.TelemetryData;
 
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.commandGroups.AutoCollectCommand;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.commandGroups.TransferCycleCommand;
+import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.commands.indexer.IndexerStop;
+import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.commands.intake.IntakeStop;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.commands.shooter.ShooterAutoVelocityCommand;
+import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.commands.shooter.ShooterStopCommand;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.commands.turret.TurretAutoAimCommand;
+import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.commands.turret.TurretRecentralizeCommand;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.subsystems.chassis.Chassis;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.subsystems.flowerRamp.FlowerRamp;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.subsystems.gate.Gate;
@@ -52,11 +56,6 @@ public class AutonomousMin extends CommandOpMode{
     private TargetingSystem targetingSystem;
     private ShooterTable shooterTable;
 
-    // Commands
-    private AutoCollectCommand autoCollectCommand;
-    private TurretAutoAimCommand autoAimCommand;
-    private ShooterAutoVelocityCommand autoVelocityCommand;
-
     // Variáveis
     private boolean autoStarted = false;
 
@@ -90,29 +89,6 @@ public class AutonomousMin extends CommandOpMode{
         follower = chassis.getFollower();
         follower.setPose(opModeStorage.getAutonomousStartPose());
 
-
-        // Commands
-        autoCollectCommand = new AutoCollectCommand(
-                intake,
-                indexer,
-                pollenSensor
-        );
-
-        autoAimCommand = new TurretAutoAimCommand(
-                turret
-        );
-
-        autoVelocityCommand = new ShooterAutoVelocityCommand(
-                shooter
-        );
-
-        intake.setDefaultCommand(autoCollectCommand);
-        indexer.setDefaultCommand(autoCollectCommand);
-
-        turret.setDefaultCommand(autoAimCommand);
-
-        shooter.setDefaultCommand(autoVelocityCommand);
-
         schedule(autoRoutine());
     }
 
@@ -120,10 +96,14 @@ public class AutonomousMin extends CommandOpMode{
     public void run(){
         super.run();
 
+        opModeStorage.setAutonomousEndPose(chassis.getPose());
+
         follower.update();
 
         // Telemetry
         telemetryData.addData("==========", "CHASSIS ==========");
+        telemetryData.addData("startAutoPose", opModeStorage.getAutonomousStartPose());
+        telemetryData.addData("endAutoPose", opModeStorage.getAutonomousEndPose());
         chassis.addTelemetry(telemetryData);
         telemetryData.addData("", "");
 
@@ -170,9 +150,15 @@ public class AutonomousMin extends CommandOpMode{
 
     private Command autoRoutine() {
         return new SequentialCommandGroup(
-                new WaitCommand(3000),
+                new TurretAutoAimCommand(turret),
+                new ShooterAutoVelocityCommand(shooter),
+                new WaitCommand(2000),
                 new TransferCycleCommand(intake, indexer, gate),
-                new FollowPathCommand(follower, autonomousPoses.shoot1PosToParkPos())
+                new FollowPathCommand(follower, autonomousPoses.shoot1PosToParkPos()),
+                new IntakeStop(intake),
+                new IndexerStop(indexer),
+                new ShooterStopCommand(shooter),
+                new TurretRecentralizeCommand(turret)
         );
     }
 }
