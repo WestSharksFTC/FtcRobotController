@@ -29,6 +29,7 @@ import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.subsystems.shooter.Sho
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.subsystems.shooter.ShooterTable;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.subsystems.turret.Turret;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.targeting.TargetingSystem;
+import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.utils.OpModeStorage;
 
 @TeleOp
 public class TesteComp extends CommandOpMode{
@@ -36,6 +37,9 @@ public class TesteComp extends CommandOpMode{
     // Controllers
     private GamepadEx driver;
     private GamepadEx operator;
+
+    // Pose
+    private OpModeStorage opModeStorage;
 
     // Telemetry
     private TelemetryData telemetryData;
@@ -79,10 +83,16 @@ public class TesteComp extends CommandOpMode{
         pollenSensor = new PollenSensor(hardwareMap);
         shooter = new Shooter(hardwareMap);
         turret = new Turret(hardwareMap);
+
         targetingSystem = new TargetingSystem(chassis);
         shooterTable = new ShooterTable();
+
         shooter.setTargetingSystemAndShooterTable(targetingSystem, shooterTable);
         turret.setTargetingSystem(targetingSystem);
+
+        opModeStorage = new OpModeStorage();
+
+        chassis.setPose(opModeStorage.getAutonomousEndPose());
 
         // Commands
         driveCommand = new DriveCommand(

@@ -6,5 +6,18 @@ import com.pedropathing.math.Pose;
 public class OpModeStorage {
     private static PoseFactory poseFactory = PoseFactory.degrees();
 
-    public static Pose autonomousEndPose = poseFactory.of(56, 8, 90);
+    private static Pose autonomousStartPose = poseFactory.of(56, 8, 180);
+    private static Pose autonomousEndPose = poseFactory.of(56, 8, 180);
+
+    public Pose getAutonomousStartPose(){
+        return autonomousStartPose;
+    }
+
+    public Pose getAutonomousEndPose() {
+        return autonomousEndPose;
+    }
+
+    public void setAutonomousEndPose(Pose pose){
+        autonomousEndPose = poseFactory.of(pose.x(), pose.y(), pose.heading());
+    }
 }

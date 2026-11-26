@@ -1,13 +1,7 @@
 package org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.subsystems.chassis;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.utils.OpModeStorage;
-import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
-
 import com.seattlesolvers.solverslib.command.SubsystemBase;
-
-import com.acmerobotics.dashboard.FtcDashboard;
-import com.acmerobotics.dashboard.telemetry.TelemetryPacket;
+import org.firstinspires.ftc.teamcode.pedroPathing.Constants;
 
 import com.pedropathing.math.Pose;
 import com.pedropathing.follower.Follower;
@@ -22,7 +16,6 @@ public class Chassis extends SubsystemBase {
 
     public Chassis(HardwareMap hardwareMap) {
         follower = Constants.create(hardwareMap);
-        setPose(OpModeStorage.autonomousEndPose);
     }
 
     public Follower getFollower() {
