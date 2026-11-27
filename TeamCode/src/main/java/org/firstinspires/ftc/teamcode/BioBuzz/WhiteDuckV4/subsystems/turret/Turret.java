@@ -14,20 +14,18 @@ import com.qualcomm.robotcore.util.Range;
 import com.seattlesolvers.solverslib.util.TelemetryData;
 
 public class Turret extends SubsystemBase {
-    private DcMotorEx turretMotor;
+    private final DcMotorEx turretMotor;
     private TargetingSystem targetingSystem;
 
     public enum State{
         AUTO_AIM,
         MANUAL_ANGLE,
-        MANUAL_POWER,
         STOP
     }
 
     private State state = State.STOP;
 
     private double targetAngleDegrees = 0.0;
-    private double manualPower = 0.0;
 
     public Turret(HardwareMap hardwareMap) {
         turretMotor = hardwareMap.get(DcMotorEx.class, TURRET_MOTOR);
@@ -65,9 +63,6 @@ public class Turret extends SubsystemBase {
             case MANUAL_ANGLE:
                 applyTargetAngle(targetAngleDegrees);
                 break;
-            case MANUAL_POWER:
-                applyManualPower(manualPower);
-                break;
             case STOP:
                 applyStop();
                 break;
@@ -80,15 +75,8 @@ public class Turret extends SubsystemBase {
         update();
     }
 
-    public void setManualPower(double power){
-        this.manualPower = Range.clip(power, -1.0, 1.0);
-        this.state = State.MANUAL_POWER;
-        update();
-    }
-
     private void applyTargetAngle(double degrees) {
         targetAngleDegrees = Range.clip(degrees, -MAX_ANGLE_DEGREES, MAX_ANGLE_DEGREES);
-        double currentPosition = getCurrentPositionDegrees();
 
         int targetTicks = (int) Math.round(MathUtils.degreesToTicks(targetAngleDegrees, getTicksPerDegree()));
         turretMotor.setTargetPosition(targetTicks);
@@ -100,26 +88,7 @@ public class Turret extends SubsystemBase {
         turretMotor.setPower(POSITION_POWER);
     }
 
-    private void applyManualPower(double power) {
-        if (turretMotor.getMode() != DcMotorEx.RunMode.RUN_USING_ENCODER) {
-            turretMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-        }
-
-        double currentPosition = getCurrentPositionDegrees();
-        double clippedPower = Range.clip(power, -1.0, 1.0);
-
-        boolean leftLimitReached = currentPosition <= -MAX_ANGLE_DEGREES && clippedPower < 0;
-        boolean rightLimitReached = currentPosition >= MAX_ANGLE_DEGREES && clippedPower > 0;
-
-        if (leftLimitReached || rightLimitReached) {
-            turretMotor.setPower(0.0);
-        } else {
-            turretMotor.setPower(clippedPower);
-        }
-    }
-
     private void applyStop(){
-        manualPower = 0.0;
         turretMotor.setPower(0.0);
     }
 
@@ -149,12 +118,11 @@ public class Turret extends SubsystemBase {
     }
 
 
-    // Telemetria da Turret
     public void addTelemetry(TelemetryData telemetry) {
         telemetry.addData("Turret State", getState());
         telemetry.addData("Current Position", getCurrentPositionDegrees());
         telemetry.addData("Current Position (Ticks)", getCurrentPositionTicks());
-        telemetry.addData("Target Position", targetAngleDegrees);
+        telemetry.addData("Target Angle", getTargetAngleDegrees());
         telemetry.addData("Error Position", targetAngleDegrees - getCurrentPositionDegrees());
         telemetry.addData("Current Power", getPower());
         telemetry.addData("Current Motor Mode", turretMotor.getMode());

@@ -32,10 +32,6 @@ public class Gate extends SubsystemBase {
         update();
     }
 
-    public void toggle(){
-        setState(getState() == State.OPEN ? State.CLOSE : State.OPEN);
-    }
-
     public State getState(){
         return state;
     }

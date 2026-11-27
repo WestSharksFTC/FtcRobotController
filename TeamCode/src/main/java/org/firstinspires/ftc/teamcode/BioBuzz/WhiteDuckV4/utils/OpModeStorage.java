@@ -4,9 +4,9 @@ import com.pedropathing.api.PoseFactory;
 import com.pedropathing.math.Pose;
 
 public class OpModeStorage {
-    private static PoseFactory poseFactory = PoseFactory.degrees();
+    private static final PoseFactory poseFactory = PoseFactory.degrees();
 
-    private static Pose autonomousStartPose = poseFactory.of(56, 8, 180);
+    private static final Pose autonomousStartPose = poseFactory.of(56, 8, 180);
     private static Pose autonomousEndPose = poseFactory.of(56, 8, 180);
 
     public Pose getAutonomousStartPose(){

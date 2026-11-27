@@ -14,8 +14,8 @@ import com.qualcomm.robotcore.hardware.VoltageSensor;
 import com.seattlesolvers.solverslib.util.TelemetryData;
 
 public class Shooter extends SubsystemBase {
-    private DcMotorEx outtake;
-    private VoltageSensor batteryVoltageSensor;
+    private final DcMotorEx outtake;
+    private final VoltageSensor batteryVoltageSensor;
     private TargetingSystem targetingSystem;
     private ShooterTable shooterTable;
 
@@ -27,7 +27,6 @@ public class Shooter extends SubsystemBase {
 
     private State state = State.STOP;
 
-    private double distanceIN = 0.0;
     private double targetRPM = 0.0;
     private double lastAppliedKF = Double.NaN;
 
@@ -58,7 +57,7 @@ public class Shooter extends SubsystemBase {
         switch(state){
             case AUTO_VELOCITY:
                 if(targetingSystem != null && shooterTable != null){
-                    this.distanceIN = targetingSystem.getTargetDistanceIN();
+                    double distanceIN = targetingSystem.getTargetDistanceIN();
                     this.targetRPM = shooterTable.getShooterVelocity(distanceIN);
                     setVelocityRPM(targetRPM);
                 }else{
@@ -131,7 +130,6 @@ public class Shooter extends SubsystemBase {
         }
     }
 
-    // Telemetria do Shooter
     public void addTelemetry(TelemetryData telemetry) {
         telemetry.addData("Current RPM", getCurrentVelocityRPM());
         telemetry.addData("Target RPM", getTargetVelocityRPM());

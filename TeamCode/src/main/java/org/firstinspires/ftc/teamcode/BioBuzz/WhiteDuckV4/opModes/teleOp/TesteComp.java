@@ -34,12 +34,7 @@ import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.utils.OpModeStorage;
 @TeleOp
 public class TesteComp extends CommandOpMode{
 
-    // Controllers
-    private GamepadEx driver;
     private GamepadEx operator;
-
-    // Pose
-    private OpModeStorage opModeStorage;
 
     // Telemetry
     private TelemetryData telemetryData;
@@ -54,12 +49,10 @@ public class TesteComp extends CommandOpMode{
     private Shooter shooter;
     private Turret turret;
     private TargetingSystem targetingSystem;
-    private ShooterTable shooterTable;
 
 
     // Commands
     private DriveCommand driveCommand;
-    private AutoCollectCommand autoCollect;
 
 
     @Override
@@ -67,7 +60,7 @@ public class TesteComp extends CommandOpMode{
         super.reset();
 
         // Controllers
-        driver = new GamepadEx(gamepad1);
+        GamepadEx driver = new GamepadEx(gamepad1);
         operator = new GamepadEx(gamepad2);
 
         // Telemetry
@@ -85,12 +78,13 @@ public class TesteComp extends CommandOpMode{
         turret = new Turret(hardwareMap);
 
         targetingSystem = new TargetingSystem(chassis);
-        shooterTable = new ShooterTable();
+        ShooterTable shooterTable = new ShooterTable();
 
         shooter.setTargetingSystemAndShooterTable(targetingSystem, shooterTable);
         turret.setTargetingSystem(targetingSystem);
 
-        opModeStorage = new OpModeStorage();
+        // Pose
+        OpModeStorage opModeStorage = new OpModeStorage();
 
         chassis.setPose(opModeStorage.getAutonomousEndPose());
 
@@ -104,10 +98,9 @@ public class TesteComp extends CommandOpMode{
 
         chassis.setDefaultCommand(driveCommand);
 
-        autoCollect = new AutoCollectCommand(
+        AutoCollectCommand autoCollect = new AutoCollectCommand(
                 intake,
-                indexer,
-                pollenSensor
+                indexer
         );
 
         intake.setDefaultCommand(autoCollect);
@@ -186,6 +179,10 @@ public class TesteComp extends CommandOpMode{
         telemetryData.addData("==========", "SHOOTER ==========");
         telemetryData.addData("Shooter State", shooter.getState());
         shooter.addTelemetry(telemetryData);
+        telemetryData.addData("", "");
+
+        telemetryData.addData("==========", "TARGETING SYSTEM ==========");
+        targetingSystem.addTelemetry(telemetryData);
         telemetryData.addData("", "");
 
         telemetryData.update();

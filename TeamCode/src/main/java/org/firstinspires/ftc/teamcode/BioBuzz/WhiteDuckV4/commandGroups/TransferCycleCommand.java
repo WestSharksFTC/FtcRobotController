@@ -18,13 +18,11 @@ import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.subsystems.intake.Inta
 public class TransferCycleCommand extends SequentialCommandGroup {
     public TransferCycleCommand(Intake intake, Indexer indexer, Gate gate) {
         addCommands(
-                // 1. Abre o gate
                 new SequentialCommandGroup(
                         new GateOpen(gate),
                         new WaitCommand(250)
                 ),
 
-                // 2. Liga intake e indexer em TRANSFER pelo tempo de saída no shooter
                 new ParallelDeadlineGroup(
                         new WaitCommand(3000),
 
@@ -32,7 +30,6 @@ public class TransferCycleCommand extends SequentialCommandGroup {
                         new IndexerTransfer(indexer)
                 ),
 
-                // 3. Para motores e fecha o gate (ao terminar este grupo, o defaultCommand retoma a coleta)
                 new ParallelCommandGroup(
                         new IntakeStop(intake),
                         new IndexerStop(indexer),

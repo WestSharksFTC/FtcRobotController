@@ -1,12 +1,17 @@
 package org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.subsystems.indexer;
 
+import static org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.subsystems.indexer.IndexerConstants.*;
+
 import com.seattlesolvers.solverslib.command.SubsystemBase;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
+import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.subsystems.pollenSensor.PollenSensor;
+
 public class Indexer extends SubsystemBase {
     private final DcMotor indexer;
+    private PollenSensor pollenSensor;
 
     public enum State{
         TRANSFER,
@@ -26,6 +31,10 @@ public class Indexer extends SubsystemBase {
         indexer.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.FLOAT);
     }
 
+    public void setPollenSensor(PollenSensor pollenSensor){
+        this.pollenSensor = pollenSensor;
+    }
+
     public void setState(State state){
         this.state = state;
         update();
@@ -38,16 +47,20 @@ public class Indexer extends SubsystemBase {
     private void update(){
         switch(state){
             case TRANSFER:
-                indexer.setPower(IndexerConstants.TRANSFER_POWER);
+                indexer.setPower(TRANSFER_POWER);
                 break;
             case FEED:
-                indexer.setPower(IndexerConstants.FEED_POWER);
+                if (pollenSensor.hasPollenOnTopSensor()) {
+                    indexer.setPower(STOP_POWER);
+                } else {
+                    indexer.setPower(FEED_POWER);
+                }
                 break;
             case REVERSE:
-                indexer.setPower(IndexerConstants.REVERSE_POWER);
+                indexer.setPower(REVERSE_POWER);
                 break;
             case STOP:
-                indexer.setPower(IndexerConstants.STOP_POWER);
+                indexer.setPower(STOP_POWER);
                 break;
         }
     }

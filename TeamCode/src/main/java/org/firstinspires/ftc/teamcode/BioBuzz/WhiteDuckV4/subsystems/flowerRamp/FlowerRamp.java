@@ -35,10 +35,6 @@ public class FlowerRamp extends SubsystemBase{
         update();
     }
 
-    public void toggle(){
-        setState(getState() == State.UP ? State.DOWN : State.UP);
-    }
-
     public State getState(){
         return state;
     }

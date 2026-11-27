@@ -15,9 +15,6 @@ public class PollenSensor extends SubsystemBase {
     private final RevColorSensorV3 distanceSensorTop;
     private final RevColorSensorV3 distanceSensorBottom;
     private final ElapsedTime fullConfirmTimer = new ElapsedTime();
-    private final ElapsedTime maxTimer = new ElapsedTime();
-    private double maxTimeSec = 0.0;
-    private double maxTimeMs = 0.0;
     private boolean wasBothDetected = false;
     private boolean isFull = false;
 
@@ -70,7 +67,6 @@ public class PollenSensor extends SubsystemBase {
         updateFullState();
     }
 
-    // Telemetria dos Sensores do Indexer
     public void addTelemetry(TelemetryData telemetry) {
         telemetry.addData("Indexer Full", isIndexerFull());
         telemetry.addData("Top Distance (cm)", getDistanceTopCM());

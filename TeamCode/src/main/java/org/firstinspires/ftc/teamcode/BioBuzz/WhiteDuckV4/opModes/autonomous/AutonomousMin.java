@@ -6,10 +6,8 @@ import com.pedropathing.follower.Follower;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
-import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
 import com.seattlesolvers.solverslib.command.WaitCommand;
-import com.seattlesolvers.solverslib.command.WaitUntilCommand;
 import com.seattlesolvers.solverslib.pedroCommand.FollowPathCommand;
 import com.seattlesolvers.solverslib.util.TelemetryData;
 
@@ -49,16 +47,6 @@ public class AutonomousMin extends CommandOpMode{
     private PollenSensor pollenSensor;
     private Shooter shooter;
     private Turret turret;
-    private TargetingSystem targetingSystem;
-    private ShooterTable shooterTable;
-
-    // Commands
-    private AutoCollectCommand autoCollectCommand;
-    private TurretAutoAimCommand autoAimCommand;
-    private ShooterAutoVelocityCommand autoVelocityCommand;
-
-    // Variáveis
-    private boolean autoStarted = false;
 
 
     @Override
@@ -79,30 +67,29 @@ public class AutonomousMin extends CommandOpMode{
         shooter = new Shooter(hardwareMap);
         turret = new Turret(hardwareMap);
 
-        targetingSystem = new TargetingSystem(chassis);
-        shooterTable = new ShooterTable();
+        TargetingSystem targetingSystem = new TargetingSystem(chassis);
+        ShooterTable shooterTable = new ShooterTable();
 
         turret.setTargetingSystem(targetingSystem);
         shooter.setTargetingSystemAndShooterTable(targetingSystem, shooterTable);
 
         autonomousPoses = new AutonomousPoses();
-        opModeStorage = new OpModeStorage();
+        OpModeStorage opModeStorage = new OpModeStorage();
         follower = chassis.getFollower();
         follower.setPose(opModeStorage.getAutonomousStartPose());
 
 
         // Commands
-        autoCollectCommand = new AutoCollectCommand(
+        AutoCollectCommand autoCollectCommand = new AutoCollectCommand(
                 intake,
-                indexer,
-                pollenSensor
+                indexer
         );
 
-        autoAimCommand = new TurretAutoAimCommand(
+        TurretAutoAimCommand autoAimCommand = new TurretAutoAimCommand(
                 turret
         );
 
-        autoVelocityCommand = new ShooterAutoVelocityCommand(
+        ShooterAutoVelocityCommand autoVelocityCommand = new ShooterAutoVelocityCommand(
                 shooter
         );
 
@@ -120,7 +107,7 @@ public class AutonomousMin extends CommandOpMode{
     public void run(){
         super.run();
 
-        follower.update();
+        opModeStorage.setAutonomousEndPose(chassis.getPose());
 
         // Telemetry
         telemetryData.addData("==========", "CHASSIS ==========");

@@ -1,7 +1,5 @@
 package org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.opModes.teleOp;
 
-import static org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.utils.OpModeStorage.*;
-
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -34,13 +32,10 @@ public class testeCommand extends CommandOpMode {
 
     // Controllers
     private GamepadEx driver;
-    private GamepadEx operator;
 
     // Telemetry
     private TelemetryData telemetryData;
 
-    // Subsystems
-    private Chassis chassis;
     private FlowerRamp flowerRamp;
     private Gate gate;
     private Intake intake;
@@ -57,14 +52,15 @@ public class testeCommand extends CommandOpMode {
 
         // Controllers
         driver = new GamepadEx(gamepad1);
-        operator = new GamepadEx(gamepad2);
+        GamepadEx operator = new GamepadEx(gamepad2);
 
         // Telemetry
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
         telemetryData = new TelemetryData(telemetry);
 
         // Subsystems
-        chassis = new Chassis(hardwareMap);
+        // Subsystems
+        Chassis chassis = new Chassis(hardwareMap);
         flowerRamp = new FlowerRamp(hardwareMap);
         gate = new Gate(hardwareMap);
         intake = new Intake(hardwareMap);

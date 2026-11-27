@@ -59,7 +59,7 @@ public class Chassis extends SubsystemBase {
     }
 
 
-    // Telemetria do Chassis
+    // Telemetry do Chassis
     public void addTelemetry(TelemetryData telemetry) {
         telemetry.addData("Robot X", getPose().x());
         telemetry.addData("Robot Y", getPose().y());

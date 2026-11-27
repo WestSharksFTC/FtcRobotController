@@ -1,11 +1,11 @@
 package org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.targeting;
 
-import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.subsystems.chassis.Chassis;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.field.FieldConstants;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.utils.MathUtils;
 
 import com.pedropathing.math.Pose;
+import com.seattlesolvers.solverslib.util.TelemetryData;
 
 public class TargetingSystem {
     private final Chassis chassis;
@@ -58,14 +58,12 @@ public class TargetingSystem {
         return Math.hypot(deltaX, deltaY);
     }
 
-    public void addTelemetry(Telemetry telemetry) {
-        telemetry.addLine("========== TARGETING ==========");
+    public void addTelemetry(TelemetryData telemetry) {
         telemetry.addData("Target Hive", atAudienceSide() ? "Audience" : "Back");
-        telemetry.addData("Target X", "%.2f", getTargetX());
-        telemetry.addData("Target Y", "%.2f", getTargetY());
-        telemetry.addData("Distance (in)", "%.2f", getTargetDistanceIN());
-        telemetry.addData("Target Heading", "%.2f°", getTargetHeading());
-        telemetry.addData("Turret Angle", "%.2f°", getTurretAngle());
-        telemetry.addLine();
+        telemetry.addData("Target X", getTargetX());
+        telemetry.addData("Target Y", getTargetY());
+        telemetry.addData("Distance (in)", getTargetDistanceIN());
+        telemetry.addData("Target Heading", getTargetHeading());
+        telemetry.addData("Turret Angle", getTurretAngle());
     }
 }
