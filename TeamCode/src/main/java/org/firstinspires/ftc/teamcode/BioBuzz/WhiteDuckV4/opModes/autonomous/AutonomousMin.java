@@ -6,15 +6,21 @@ import com.pedropathing.follower.Follower;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
+import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
 import com.seattlesolvers.solverslib.command.WaitCommand;
+import com.seattlesolvers.solverslib.command.WaitUntilCommand;
 import com.seattlesolvers.solverslib.pedroCommand.FollowPathCommand;
 import com.seattlesolvers.solverslib.util.TelemetryData;
 
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.commandGroups.AutoCollectCommand;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.commandGroups.TransferCycleCommand;
+import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.commands.indexer.IndexerStop;
+import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.commands.intake.IntakeStop;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.commands.shooter.ShooterAutoVelocityCommand;
+import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.commands.shooter.ShooterStopCommand;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.commands.turret.TurretAutoAimCommand;
+import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.commands.turret.TurretRecentralizeCommand;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.subsystems.chassis.Chassis;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.subsystems.flowerRamp.FlowerRamp;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.subsystems.gate.Gate;
@@ -47,6 +53,11 @@ public class AutonomousMin extends CommandOpMode{
     private PollenSensor pollenSensor;
     private Shooter shooter;
     private Turret turret;
+    private TargetingSystem targetingSystem;
+    private ShooterTable shooterTable;
+
+    // Variáveis
+    private boolean autoStarted = false;
 
 
     @Override
@@ -67,38 +78,16 @@ public class AutonomousMin extends CommandOpMode{
         shooter = new Shooter(hardwareMap);
         turret = new Turret(hardwareMap);
 
-        TargetingSystem targetingSystem = new TargetingSystem(chassis);
-        ShooterTable shooterTable = new ShooterTable();
+        targetingSystem = new TargetingSystem(chassis);
+        shooterTable = new ShooterTable();
 
         turret.setTargetingSystem(targetingSystem);
         shooter.setTargetingSystemAndShooterTable(targetingSystem, shooterTable);
 
         autonomousPoses = new AutonomousPoses();
-        OpModeStorage opModeStorage = new OpModeStorage();
+        opModeStorage = new OpModeStorage();
         follower = chassis.getFollower();
         follower.setPose(opModeStorage.getAutonomousStartPose());
-
-
-        // Commands
-        AutoCollectCommand autoCollectCommand = new AutoCollectCommand(
-                intake,
-                indexer
-        );
-
-        TurretAutoAimCommand autoAimCommand = new TurretAutoAimCommand(
-                turret
-        );
-
-        ShooterAutoVelocityCommand autoVelocityCommand = new ShooterAutoVelocityCommand(
-                shooter
-        );
-
-        intake.setDefaultCommand(autoCollectCommand);
-        indexer.setDefaultCommand(autoCollectCommand);
-
-        turret.setDefaultCommand(autoAimCommand);
-
-        shooter.setDefaultCommand(autoVelocityCommand);
 
         schedule(autoRoutine());
     }
@@ -109,8 +98,12 @@ public class AutonomousMin extends CommandOpMode{
 
         opModeStorage.setAutonomousEndPose(chassis.getPose());
 
+        follower.update();
+
         // Telemetry
         telemetryData.addData("==========", "CHASSIS ==========");
+        telemetryData.addData("startAutoPose", opModeStorage.getAutonomousStartPose());
+        telemetryData.addData("endAutoPose", opModeStorage.getAutonomousEndPose());
         chassis.addTelemetry(telemetryData);
         telemetryData.addData("", "");
 
@@ -157,9 +150,15 @@ public class AutonomousMin extends CommandOpMode{
 
     private Command autoRoutine() {
         return new SequentialCommandGroup(
-                new WaitCommand(3000),
+                new TurretAutoAimCommand(turret),
+                new ShooterAutoVelocityCommand(shooter),
+                new WaitCommand(2000),
                 new TransferCycleCommand(intake, indexer, gate),
-                new FollowPathCommand(follower, autonomousPoses.shoot1PosToParkPos())
+                new FollowPathCommand(follower, autonomousPoses.shoot1PosToParkPos()),
+                new IntakeStop(intake),
+                new IndexerStop(indexer),
+                new ShooterStopCommand(shooter),
+                new TurretRecentralizeCommand(turret)
         );
     }
 }

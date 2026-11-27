@@ -24,7 +24,7 @@ public class TransferCycleCommand extends SequentialCommandGroup {
                 ),
 
                 new ParallelDeadlineGroup(
-                        new WaitCommand(3000),
+                        new WaitCommand(2000),
 
                         new IntakeTransfer(intake),
                         new IndexerTransfer(indexer)

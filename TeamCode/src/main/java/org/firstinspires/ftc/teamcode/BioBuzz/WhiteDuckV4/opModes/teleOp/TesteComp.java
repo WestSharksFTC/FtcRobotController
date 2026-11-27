@@ -91,9 +91,9 @@ public class TesteComp extends CommandOpMode{
         // Commands
         driveCommand = new DriveCommand(
                 chassis,
-                () -> operator.getLeftY(),
-                () -> -operator.getLeftX(),
-                () -> -operator.getRightX()
+                () -> driver.getLeftY(),
+                () -> -driver.getLeftX(),
+                () -> -driver.getRightX()
         );
 
         chassis.setDefaultCommand(driveCommand);
@@ -140,6 +140,8 @@ public class TesteComp extends CommandOpMode{
         telemetryData.addData("==========", "CHASSIS ==========");
         telemetryData.addData("Field Centric", driveCommand.isFieldCentric() ? "ON" : "OFF");
         telemetryData.addData("Hold Mode", driveCommand.isHoldEnabled() ? "ON" : "OFF");
+        telemetryData.addData("startAutoPose", opModeStorage.getAutonomousStartPose());
+        telemetryData.addData("endAutoPose", opModeStorage.getAutonomousEndPose());
         chassis.addTelemetry(telemetryData);
         telemetryData.addData("", "");
 
