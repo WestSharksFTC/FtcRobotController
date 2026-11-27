@@ -3,14 +3,11 @@ package org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.opModes.autonomous;
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
 import com.pedropathing.follower.Follower;
-import com.pedropathing.utils.Control;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.seattlesolvers.solverslib.command.Command;
 import com.seattlesolvers.solverslib.command.CommandOpMode;
-import com.seattlesolvers.solverslib.command.InstantCommand;
 import com.seattlesolvers.solverslib.command.SequentialCommandGroup;
 import com.seattlesolvers.solverslib.command.WaitCommand;
-import com.seattlesolvers.solverslib.command.WaitUntilCommand;
 import com.seattlesolvers.solverslib.pedroCommand.FollowPathCommand;
 import com.seattlesolvers.solverslib.util.TelemetryData;
 
@@ -56,14 +53,6 @@ public class AutonomousMid extends CommandOpMode{
     private PollenSensor pollenSensor;
     private Shooter shooter;
     private Turret turret;
-    private TargetingSystem targetingSystem;
-    private ShooterTable shooterTable;
-
-    // Commands
-    private AutoCollectCommand autoCollectCommand;
-
-    // Variáveis
-    private boolean autoStarted = false;
 
 
     @Override
@@ -84,8 +73,8 @@ public class AutonomousMid extends CommandOpMode{
         shooter = new Shooter(hardwareMap);
         turret = new Turret(hardwareMap);
 
-        targetingSystem = new TargetingSystem(chassis);
-        shooterTable = new ShooterTable();
+        TargetingSystem targetingSystem = new TargetingSystem(chassis);
+        ShooterTable shooterTable = new ShooterTable();
 
         turret.setTargetingSystem(targetingSystem);
         shooter.setTargetingSystemAndShooterTable(targetingSystem, shooterTable);
@@ -95,10 +84,10 @@ public class AutonomousMid extends CommandOpMode{
         follower = chassis.getFollower();
         follower.setPose(opModeStorage.getAutonomousStartPose());
 
-        autoCollectCommand = new AutoCollectCommand(
+        // Commands
+        AutoCollectCommand autoCollectCommand = new AutoCollectCommand(
                 intake,
-                indexer,
-                pollenSensor
+                indexer
         );
 
         intake.setDefaultCommand(autoCollectCommand);
@@ -112,8 +101,6 @@ public class AutonomousMid extends CommandOpMode{
         super.run();
 
         opModeStorage.setAutonomousEndPose(chassis.getPose());
-
-        follower.update();
 
         // Telemetry
         telemetryData.addData("==========", "CHASSIS ==========");
