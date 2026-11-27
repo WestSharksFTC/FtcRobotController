@@ -13,7 +13,7 @@ public class AutonomousPoses {
     private final Pose collect1GardenPos = poseFactory.of(8, 8, 180);
     private final Pose shoot2AndShoot4Pos = poseFactory.of(38, 118, 90);
     private final Pose collect2FlowerAndShoot3Pos = poseFactory.of(47, 128, 90);
-    private final Pose collect3FlowerPos = poseFactory.of(12, 46, 180);
+    private final Pose collect3FlowerPos = poseFactory.of(10, 47, 180);
     private final Pose parkPos = poseFactory.of(10, 95, 0);
 
     // Control Points

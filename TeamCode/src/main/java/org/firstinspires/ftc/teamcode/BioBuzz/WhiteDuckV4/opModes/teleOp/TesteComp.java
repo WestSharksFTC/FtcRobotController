@@ -34,8 +34,6 @@ import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.utils.OpModeStorage;
 @TeleOp
 public class TesteComp extends CommandOpMode{
 
-    private GamepadEx operator;
-
     // Telemetry
     private TelemetryData telemetryData;
 
@@ -49,6 +47,7 @@ public class TesteComp extends CommandOpMode{
     private Shooter shooter;
     private Turret turret;
     private TargetingSystem targetingSystem;
+    private OpModeStorage opModeStorage;
 
 
     // Commands
@@ -61,7 +60,7 @@ public class TesteComp extends CommandOpMode{
 
         // Controllers
         GamepadEx driver = new GamepadEx(gamepad1);
-        operator = new GamepadEx(gamepad2);
+        GamepadEx operator = new GamepadEx(gamepad2);
 
         // Telemetry
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
@@ -77,6 +76,9 @@ public class TesteComp extends CommandOpMode{
         shooter = new Shooter(hardwareMap);
         turret = new Turret(hardwareMap);
 
+        intake.setPollenSensor(pollenSensor);
+        indexer.setPollenSensor(pollenSensor);
+
         targetingSystem = new TargetingSystem(chassis);
         ShooterTable shooterTable = new ShooterTable();
 
@@ -84,7 +86,7 @@ public class TesteComp extends CommandOpMode{
         turret.setTargetingSystem(targetingSystem);
 
         // Pose
-        OpModeStorage opModeStorage = new OpModeStorage();
+        opModeStorage = new OpModeStorage();
 
         chassis.setPose(opModeStorage.getAutonomousEndPose());
 
@@ -98,14 +100,6 @@ public class TesteComp extends CommandOpMode{
 
         chassis.setDefaultCommand(driveCommand);
 
-        AutoCollectCommand autoCollect = new AutoCollectCommand(
-                intake,
-                indexer
-        );
-
-        intake.setDefaultCommand(autoCollect);
-        indexer.setDefaultCommand(autoCollect);
-
         driver.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whenPressed(new InstantCommand(() -> driveCommand.toggleFieldCentric()));
         driver.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whenPressed(new InstantCommand(() -> driveCommand.toggleHold()));
 
@@ -113,7 +107,7 @@ public class TesteComp extends CommandOpMode{
         operator.getGamepadButton(GamepadKeys.Button.DPAD_DOWN).whenPressed(new FlowerRampDown(flowerRamp));
 
         operator.getGamepadButton(GamepadKeys.Button.B).whenPressed(new TransferCycleCommand(intake, indexer, gate));
-        operator.getGamepadButton(GamepadKeys.Button.A).whenPressed(new ReverseCycleCommand(intake, indexer, gate));
+        operator.getGamepadButton(GamepadKeys.Button.A).toggleWhenPressed(new AutoCollectCommand(intake, indexer), new ReverseCycleCommand(intake, indexer, gate));
 
         operator.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).toggleWhenPressed(new TurretAutoAimCommand(turret), new TurretStopCommand(turret));
 

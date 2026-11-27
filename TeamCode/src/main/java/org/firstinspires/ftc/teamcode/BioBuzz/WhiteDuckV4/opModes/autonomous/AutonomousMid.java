@@ -12,6 +12,7 @@ import com.seattlesolvers.solverslib.pedroCommand.FollowPathCommand;
 import com.seattlesolvers.solverslib.util.TelemetryData;
 
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.commandGroups.AutoCollectCommand;
+import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.commandGroups.ReverseCycleCommand;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.commandGroups.TransferCycleCommand;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.commands.flowerRamp.FlowerRampDown;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.commands.flowerRamp.FlowerRampUp;
@@ -73,6 +74,9 @@ public class AutonomousMid extends CommandOpMode{
         shooter = new Shooter(hardwareMap);
         turret = new Turret(hardwareMap);
 
+        intake.setPollenSensor(pollenSensor);
+        indexer.setPollenSensor(pollenSensor);
+
         TargetingSystem targetingSystem = new TargetingSystem(chassis);
         ShooterTable shooterTable = new ShooterTable();
 
@@ -83,15 +87,6 @@ public class AutonomousMid extends CommandOpMode{
         opModeStorage = new OpModeStorage();
         follower = chassis.getFollower();
         follower.setPose(opModeStorage.getAutonomousStartPose());
-
-        // Commands
-        AutoCollectCommand autoCollectCommand = new AutoCollectCommand(
-                intake,
-                indexer
-        );
-
-        intake.setDefaultCommand(autoCollectCommand);
-        indexer.setDefaultCommand(autoCollectCommand);
 
         schedule(autoRoutine());
     }
@@ -157,24 +152,31 @@ public class AutonomousMid extends CommandOpMode{
 
                 new WaitCommand(2000),
                 new TransferCycleCommand(intake, indexer, gate),
+                new ReverseCycleCommand(intake, indexer, gate),
+                new AutoCollectCommand(intake, indexer),
 
                 new FollowPathCommand(follower, autonomousPoses.shoot1PosToCollect1Pos()),
                 new WaitCommand(2000),
 
                 new FollowPathCommand(follower, autonomousPoses.collect1PosToShoot2Pos()),
                 new TransferCycleCommand(intake, indexer, gate),
+                new ReverseCycleCommand(intake, indexer, gate),
+                new AutoCollectCommand(intake, indexer),
 
                 new FlowerRampDown(flowerRamp),
                 new WaitCommand(1000),
                 new FollowPathCommand(follower, autonomousPoses.shoot2PosToCollect2AndShoot3Pos()),
                 new WaitCommand(3000),
                 new TransferCycleCommand(intake, indexer, gate),
+                new ReverseCycleCommand(intake, indexer, gate),
+                new AutoCollectCommand(intake, indexer),
 
                 new FollowPathCommand(follower, autonomousPoses.shoot3PosToCollect3Pos()),
                 new WaitCommand(3000),
 
                 new FollowPathCommand(follower, autonomousPoses.collect3PosToShoot4Pos()),
                 new TransferCycleCommand(intake, indexer, gate),
+                new ReverseCycleCommand(intake, indexer, gate),
                 new FlowerRampUp(flowerRamp),
 
                 new FollowPathCommand(follower, autonomousPoses.shoot4PosToParkPos()),
