@@ -31,12 +31,11 @@ public class TransferCycleCommand extends SequentialCommandGroup {
                 ),
 
                 new ParallelCommandGroup(
-                        new IntakeStop(intake),
-                        new IndexerStop(indexer),
-                        new GateClose(gate)
+                        new GateClose(gate),
+                        new AutoCollectCommand(intake, indexer, gate)
                 )
         );
 
-        addRequirements(intake, indexer);
+        addRequirements(intake, indexer, gate);
     }
 }

@@ -144,8 +144,10 @@ public class AutonomousMin extends CommandOpMode{
                 new TurretAutoAimCommand(turret),
                 new ShooterAutoVelocityCommand(shooter),
                 new WaitCommand(2000),
+
                 new TransferCycleCommand(intake, indexer, gate),
                 new FollowPathCommand(follower, autonomousPoses.shoot1PosToParkPos()),
+
                 new IntakeStop(intake),
                 new IndexerStop(indexer),
                 new ShooterStopCommand(shooter),

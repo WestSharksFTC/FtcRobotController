@@ -15,9 +15,11 @@ import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.commandGroups.Transfer
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.commands.chassis.DriveCommand;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.commands.flowerRamp.FlowerRampDown;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.commands.flowerRamp.FlowerRampUp;
-import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.commands.shooter.ShooterAutoVelocityCommand;
+import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.commands.gate.GateClose;
+import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.commands.gate.GateOpen;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.commands.shooter.ShooterStopCommand;
-import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.commands.turret.TurretAutoAimCommand;
+import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.commands.shooter.ShooterManualVelocityCommand;
+import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.commands.turret.TurretManualAngleCommand;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.commands.turret.TurretStopCommand;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.subsystems.chassis.Chassis;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.subsystems.flowerRamp.FlowerRamp;
@@ -29,29 +31,30 @@ import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.subsystems.shooter.Sho
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.subsystems.shooter.ShooterTable;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.subsystems.turret.Turret;
 import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.targeting.TargetingSystem;
-import org.firstinspires.ftc.teamcode.BioBuzz.WhiteDuckV4.utils.OpModeStorage;
 
 @TeleOp
-public class TesteComp extends CommandOpMode{
+public class TuningTest extends CommandOpMode{
+
+    // Controllers
+    private GamepadEx driver;
 
     // Telemetry
     private TelemetryData telemetryData;
 
-    // Subsystems
-    private Chassis chassis;
-    private FlowerRamp flowerRamp;
-    private Gate gate;
     private Intake intake;
     private Indexer indexer;
+    private Gate gate;
     private PollenSensor pollenSensor;
     private Shooter shooter;
     private Turret turret;
     private TargetingSystem targetingSystem;
-    private OpModeStorage opModeStorage;
 
 
     // Commands
     private DriveCommand driveCommand;
+
+    private double shooterVelocityRPM = 0.0;
+    private double turretAngleDegrees = 0.0;
 
 
     @Override
@@ -59,7 +62,7 @@ public class TesteComp extends CommandOpMode{
         super.reset();
 
         // Controllers
-        GamepadEx driver = new GamepadEx(gamepad1);
+        driver = new GamepadEx(gamepad1);
         GamepadEx operator = new GamepadEx(gamepad2);
 
         // Telemetry
@@ -67,8 +70,9 @@ public class TesteComp extends CommandOpMode{
         telemetryData = new TelemetryData(telemetry);
 
         // Subsystems
-        chassis = new Chassis(hardwareMap);
-        flowerRamp = new FlowerRamp(hardwareMap);
+        // Subsystems
+        Chassis chassis = new Chassis(hardwareMap);
+        FlowerRamp flowerRamp = new FlowerRamp(hardwareMap);
         gate = new Gate(hardwareMap);
         intake = new Intake(hardwareMap);
         indexer = new Indexer(hardwareMap);
@@ -85,17 +89,12 @@ public class TesteComp extends CommandOpMode{
         shooter.setTargetingSystemAndShooterTable(targetingSystem, shooterTable);
         turret.setTargetingSystem(targetingSystem);
 
-        // Pose
-        opModeStorage = new OpModeStorage();
-
-        chassis.setPose(opModeStorage.getAutonomousEndPose());
-
         // Commands
         driveCommand = new DriveCommand(
                 chassis,
-                () -> driver.getLeftY(),
-                () -> -driver.getLeftX(),
-                () -> -driver.getRightX()
+                () -> -driver.getLeftY(),
+                () -> driver.getLeftX(),
+                () -> driver.getRightX()
         );
 
         chassis.setDefaultCommand(driveCommand);
@@ -103,83 +102,56 @@ public class TesteComp extends CommandOpMode{
         driver.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).whenPressed(new InstantCommand(() -> driveCommand.toggleFieldCentric()));
         driver.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).whenPressed(new InstantCommand(() -> driveCommand.toggleHold()));
 
-        operator.getGamepadButton(GamepadKeys.Button.DPAD_UP).whenPressed(new FlowerRampUp(flowerRamp));
-        operator.getGamepadButton(GamepadKeys.Button.DPAD_DOWN).whenPressed(new FlowerRampDown(flowerRamp));
+        operator.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).toggleWhenPressed(new GateOpen(gate), new GateClose(gate));
+        operator.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).toggleWhenPressed(new FlowerRampDown(flowerRamp), new FlowerRampUp(flowerRamp));
+
+        schedule(new AutoCollectCommand(intake, indexer, gate));
 
         operator.getGamepadButton(GamepadKeys.Button.B).whenPressed(new TransferCycleCommand(intake, indexer, gate));
-        operator.getGamepadButton(GamepadKeys.Button.A).toggleWhenPressed(new AutoCollectCommand(intake, indexer), new ReverseCycleCommand(intake, indexer, gate));
+        operator.getGamepadButton(GamepadKeys.Button.A).whenPressed(new ReverseCycleCommand(intake, indexer, gate));
 
-        operator.getGamepadButton(GamepadKeys.Button.LEFT_BUMPER).toggleWhenPressed(new TurretAutoAimCommand(turret), new TurretStopCommand(turret));
+        operator.getGamepadButton(GamepadKeys.Button.DPAD_LEFT).toggleWhenPressed(new TurretManualAngleCommand(turret, () -> turretAngleDegrees), new TurretStopCommand(turret));
+        operator.getGamepadButton(GamepadKeys.Button.Y).whenPressed(new InstantCommand(() -> {
+            turretAngleDegrees += 5.0;
+            if (turret.getState() == Turret.State.MANUAL_ANGLE) {
+                turret.setManualAngle(turretAngleDegrees);
+            }
+        }));
+        operator.getGamepadButton(GamepadKeys.Button.X).whenPressed(new InstantCommand(() -> {
+            turretAngleDegrees -= 5.0;
+            if (turret.getState() == Turret.State.MANUAL_ANGLE) {
+                turret.setManualAngle(turretAngleDegrees);
+            }
+        }));
 
-        operator.getGamepadButton(GamepadKeys.Button.RIGHT_BUMPER).toggleWhenPressed(new ShooterAutoVelocityCommand(shooter), new ShooterStopCommand(shooter));
+
+        operator.getGamepadButton(GamepadKeys.Button.DPAD_RIGHT).toggleWhenPressed(new ShooterManualVelocityCommand(shooter, () -> shooterVelocityRPM), new ShooterStopCommand(shooter));
+        operator.getGamepadButton(GamepadKeys.Button.DPAD_UP).whenPressed(new InstantCommand(() -> {
+            shooterVelocityRPM = Math.max(0.0, shooterVelocityRPM + 20.0);
+            if (shooter.getState() == Shooter.State.MANUAL_VELOCITY) {
+                shooter.setManualVelocity(shooterVelocityRPM);
+            }
+        }));
+        operator.getGamepadButton(GamepadKeys.Button.DPAD_DOWN).whenPressed(new InstantCommand(() -> {
+            shooterVelocityRPM = Math.max(0.0, shooterVelocityRPM - 20.0);
+            if (shooter.getState() == Shooter.State.MANUAL_VELOCITY) {
+                shooter.setManualVelocity(shooterVelocityRPM);
+            }
+        }));
+
     }
 
     @Override
     public void run(){
         super.run();
 
-        if(pollenSensor.isIndexerFull()){
-            gamepad1.rumble(-1);
-            gamepad2.rumble(-1);
-            gamepad1.setLedColor(255, 0, 0, -1);
-            gamepad2.setLedColor(255, 0, 0, -1);
-        }else{
-            gamepad1.stopRumble();
-            gamepad2.stopRumble();
-            gamepad1.setLedColor(0, 0, 255, -1);
-            gamepad2.setLedColor(0, 0, 255, -1);
-        }
-
         // Telemetry
-        telemetryData.addData("==========", "CHASSIS ==========");
-        telemetryData.addData("Field Centric", driveCommand.isFieldCentric() ? "ON" : "OFF");
-        telemetryData.addData("Hold Mode", driveCommand.isHoldEnabled() ? "ON" : "OFF");
-        telemetryData.addData("startAutoPose", opModeStorage.getAutonomousStartPose());
-        telemetryData.addData("endAutoPose", opModeStorage.getAutonomousEndPose());
-        chassis.addTelemetry(telemetryData);
+        telemetryData.addData("Velocity no button", shooterVelocityRPM);
+        telemetryData.addData("Velocity na flywheel", shooter.getCurrentVelocityRPM());
+        telemetryData.addData("Target Velocity", shooter.getTargetVelocityRPM());
+        telemetryData.addData("Distance", targetingSystem.getTargetDistanceIN());
         telemetryData.addData("", "");
-
-
-        telemetryData.addData("==========", "FLOWER RAMP ==========");
-        telemetryData.addData("Flower Ramp State", flowerRamp.getState());
-        telemetryData.addData("", "");
-
-
-        telemetryData.addData("==========", "INTAKE ==========");
-        telemetryData.addData("Intake State", intake.getState());
-        telemetryData.addData("", "");
-
-
-        telemetryData.addData("==========", "POLLEN SENSOR ==========");
-        pollenSensor.addTelemetry(telemetryData);
-        telemetryData.addData("", "");
-
-
-        telemetryData.addData("==========", "INDEXER ==========");
-        telemetryData.addData("Indexer State", indexer.getState());
-        telemetryData.addData("", "");
-
-
-        telemetryData.addData("==========", "GATE ==========");
-        telemetryData.addData("Gate State", gate.getState());
-        gate.addTelemetry(telemetryData);
-        telemetryData.addData("", "");
-
-
-        telemetryData.addData("==========", "TURRET ==========");
-        telemetryData.addData("Turret State", turret.getState());
-        turret.addTelemetry(telemetryData);
-        telemetryData.addData("", "");
-
-
-        telemetryData.addData("==========", "SHOOTER ==========");
-        telemetryData.addData("Shooter State", shooter.getState());
         shooter.addTelemetry(telemetryData);
-        telemetryData.addData("", "");
-
-        telemetryData.addData("==========", "TARGETING SYSTEM ==========");
-        targetingSystem.addTelemetry(telemetryData);
-        telemetryData.addData("", "");
 
         telemetryData.update();
     }
